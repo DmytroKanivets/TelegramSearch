@@ -26,13 +26,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.sql.DataSource;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
+import java.sql.*;
+import java.util.*;
 
 @RestController
 @SpringBootApplication
@@ -42,13 +37,16 @@ public class Main {
         SpringApplication.run(Main.class, args);
     }
 
+    @Autowired
+    DataSource dataSource;
+
     @RequestMapping("/")
     String index() {
         return "Hello!";
     }
 
     @RequestMapping("/api")
-    String db() {
+    String api() {
         return "api here";
     }
 
@@ -58,5 +56,17 @@ public class Main {
             put("key", "value");
             put("key2", "value2");
         }};
+    }
+
+    @RequestMapping("/db")
+    List<String> db() throws SQLException {
+        DatabaseMetaData md = dataSource.getConnection().getMetaData();
+        ResultSet rs = md.getTables(null, null, "%", null);
+        List<String> result = new LinkedList<>();
+        while (rs.next()) {
+            result.add(rs.getString(3));
+        }
+
+        return result;
     }
 }
