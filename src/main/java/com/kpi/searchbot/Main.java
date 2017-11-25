@@ -14,14 +14,11 @@
  * limitations under the License.
  */
 
-package com.example;
+package com.kpi.searchbot;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.annotation.Bean;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -29,44 +26,9 @@ import javax.sql.DataSource;
 import java.sql.*;
 import java.util.*;
 
-@RestController
 @SpringBootApplication
 public class Main {
-
     public static void main(String[] args) throws Exception {
         SpringApplication.run(Main.class, args);
-    }
-
-    @Autowired
-    DataSource dataSource;
-
-    @RequestMapping("/")
-    String index() {
-        return "Hello!";
-    }
-
-    @RequestMapping("/api")
-    String api() {
-        return "api here";
-    }
-
-    @RequestMapping("/dto")
-    Object dto() {
-        return new HashMap<String, String>() {{
-            put("key", "value");
-            put("key2", "value2");
-        }};
-    }
-
-    @RequestMapping("/db")
-    List<String> db() throws SQLException {
-        DatabaseMetaData md = dataSource.getConnection().getMetaData();
-        ResultSet rs = md.getTables(null, null, "%", null);
-        List<String> result = new LinkedList<>();
-        while (rs.next()) {
-            result.add(rs.getString(3));
-        }
-
-        return result;
     }
 }
