@@ -1,7 +1,20 @@
 package com.kpi.searchbot.entity;
 
-/**
- * Created by Dima on 25.11.2017.
- */
+
+import lombok.Data;
+
+import javax.persistence.Entity;
+import javax.persistence.Id;
+
+@Data
+@Entity
 public class Message {
+    @Id
+    private String id;
+    private String author;
+    private String body;
+
+    /*
+    List<String> tags;
+     */
 }

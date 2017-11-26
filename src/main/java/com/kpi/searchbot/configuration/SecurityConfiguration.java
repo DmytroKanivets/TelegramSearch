@@ -1,7 +1,15 @@
 package com.kpi.searchbot.configuration;
 
-/**
- * Created by Dima on 25.11.2017.
- */
-public class SecurityConfiguration {
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+
+@EnableWebSecurity
+public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
+    @Override
+    protected void configure(HttpSecurity security) throws Exception {
+        security
+                .httpBasic().disable()
+                .csrf().disable();
+    }
 }

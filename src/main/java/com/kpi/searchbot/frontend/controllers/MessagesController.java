@@ -3,12 +3,12 @@ package com.kpi.searchbot.frontend.controllers;
 import com.kpi.searchbot.entity.Message;
 import com.kpi.searchbot.services.data.MessageRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@RestController("/api/message")
+@RestController
+@RequestMapping("/api/message")
 public class MessagesController {
     private MessageRepository repository;
 
@@ -17,10 +17,26 @@ public class MessagesController {
         this.repository = repository;
     }
 
-    @RequestMapping("/all")
+    @GetMapping("/")
     public Iterable<Message> getAll() {
         return repository.findAll();
     }
 
+    @GetMapping("/{id}")
+    public Message getById(@PathVariable String id) {
+        return repository.findOne(id);
+    }
+
+    @PutMapping("/")
+    public void create(@RequestBody Message message) {
+        if (message.getId() == null) {
+            message.setId(String.valueOf(message.hashCode()));
+        }
+    }
+
+    @GetMapping("/search")
+    public Iterable<Message> findByBody(@RequestParam("body") String body) {
+        return repository.findByBodyContainingIgnoreCase(body);
+    }
 
 }

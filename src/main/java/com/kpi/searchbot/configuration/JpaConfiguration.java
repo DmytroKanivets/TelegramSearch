@@ -1,7 +1,7 @@
 package com.kpi.searchbot.configuration;
 
-/**
- * Created by Dima on 25.11.2017.
- */
+import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+
+@EnableJpaRepositories
 public class JpaConfiguration {
 }
