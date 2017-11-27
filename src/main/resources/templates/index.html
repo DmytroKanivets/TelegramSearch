@@ -21,12 +21,68 @@
             <div class="col-md-12">
                 <h1>Search</h1>
                 <form id="form-search-message">
-                    <div class="input-group mb-3">
-                        <input type="text" class="form-control no-border" name="body" placeholder="Search for ..."/>
-                        <span class="input-group-btn">
-                            <button class="btn btn-default no-border" type="button" onclick="searchForMessages()"><span class="fa fa-search"></span></button>
-                        </span>
+                    <div class="row">
+                        <div class="col">
+                            <div class="input-group mb-3">
+                                <input type="text" class="form-control" name="body" placeholder="Search for text"/>
+                                <span class="input-group-btn">
+                                    <button class="btn btn-default no-border" type="button" onclick="searchForMessages()"><span class="fa fa-search"></span></button>
+                                </span>
+                            </div>
+                        </div>
                     </div>
+
+                    <div class="row">
+                        <div class="col-md-auto">
+                            <div class="row">
+                                <label class="custom-control custom-checkbox mr-sm-2 mb-2">
+                                    <input type="checkbox" class="custom-control-input" name="author" onchange="check(this)"/>
+                                    <span class="custom-control-indicator"></span>
+                                    <span class="custom-control-description">Author</span>
+                                </label>
+                            </div>
+                            <div class="row">
+                                <label class="custom-control custom-checkbox  mr-sm-2 mb-2">
+                                    <input type="checkbox" class="custom-control-input" name="channel" onchange="check(this)"/>
+                                    <span class="custom-control-indicator"></span>
+                                    <span class="custom-control-description">Channel</span>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col">
+                            <div class="row">
+                                <input type="text" class="form-control" name="authorParam" placeholder="" disabled=''/>
+                            </div>
+                            <div class="row">
+                                <input type="text" class="form-control" name="channelParam" placeholder="" disabled=''/>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!--<div class="row">-->
+
+
+                        <!--<div class="form-inline">-->
+                                <!--<label class="custom-control custom-checkbox">-->
+                                    <!--<input type="checkbox" class="custom-control-input" name="author" onchange="check(this)">-->
+                                    <!--<span class="custom-control-indicator"></span>-->
+                                    <!--<span class="custom-control-description">Author</span>-->
+                                <!--</label>-->
+
+                                <!--<input type="text" class="form-control" name="authorParam" placeholder=""/>-->
+                        <!--</div>-->
+                    <!--</div>-->
+
+                    <!--<div class="row">-->
+                        <!--<div class="col form-inline">-->
+                            <!--<label class="custom-control custom-checkbox">-->
+                                <!--<input type="checkbox" class="custom-control-input" name="channel" onchange="check(this)">-->
+                                <!--<span class="custom-control-indicator"></span>-->
+                                <!--<span class="custom-control-description">Channel</span>-->
+                            <!--</label>-->
+                            <!--<input type="text" class="form-control" name="channelParam" placeholder=""/>-->
+                        <!--</div>-->
+                    <!--</div>-->
                 </form>
             </div>
         </div>
@@ -76,8 +132,32 @@
         data.forEach(addSearchResult);
     }
 
+    function check(el) {
+        var element = $("[name='" + el.name + "Param" + "']:first");
+        if (el.checked) {
+            element.removeAttr('disabled');
+        } else {
+            element.attr('disabled', '');
+            element.val('');
+        }
+    }
+
     function searchForMessages() {
-        sendForm('/api/message/', '#form-search-message', displaySearchResults);
+        var formData = serializeFormData('#form-search-message');
+
+        var searchParams = {
+            body: formData.body,
+            author: $("[name='author']:first").is(":checked") ? $("[name='authorParam" + "']:first").val() : "",
+            channel: $("[name='channel']:first").is(":checked") ? $("[name='channelParam" + "']:first").val() : ""
+        };
+
+        var params = {
+            url: '/api/message/',
+            data: JSON.stringify(searchParams),
+            success: displaySearchResults
+        };
+
+        sendJsonPayload(params);
     }
 
     $("#form-search-message").submit(function(e) {

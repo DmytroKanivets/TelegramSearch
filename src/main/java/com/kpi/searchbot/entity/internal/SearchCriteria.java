@@ -1,5 +1,7 @@
-package com.kpi.searchbot.entity;
+package com.kpi.searchbot.entity.internal;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.kpi.searchbot.entity.internal.Message;
 import lombok.Data;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.domain.Specifications;
@@ -12,20 +14,24 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.function.BinaryOperator;
-import java.util.function.Function;
 
 @Data
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class SearchCriteria {
     private String body;
+    private String author;
+    private String channel;
 
     private Specification<Message> body() {
-        return new Specification<Message>() {
-            @Override
-            public Predicate toPredicate(Root<Message> root, CriteriaQuery<?> criteriaQuery, CriteriaBuilder criteriaBuilder) {
-                return body == null ? null : criteriaBuilder.like(root.get("body"), "%" + body + "%");
-            }
-        };
+        return (root, criteriaQuery, criteriaBuilder) -> body == null ? null : criteriaBuilder.like(root.get("body"), "%" + body + "%");
+    }
+
+    private Specification<Message> channel() {
+        return (root, criteriaQuery, criteriaBuilder) -> channel == null ? null : criteriaBuilder.like(root.get("channel"), "%" + channel + "%");
+    }
+
+    private Specification<Message> author() {
+        return (root, criteriaQuery, criteriaBuilder) -> author == null ? null : criteriaBuilder.like(root.get("author"), "%" + author + "%");
     }
 
     public Specification<Message> buildSpecification() {
@@ -33,6 +39,8 @@ public class SearchCriteria {
             List<Specification<Message>> specifications = new LinkedList<>();
 
             specifications.add(body());
+            specifications.add(channel());
+            specifications.add(author());
 
             return specifications.stream().filter(Objects::nonNull).reduce((specification, specification2) -> {
                 if (specification == null) {

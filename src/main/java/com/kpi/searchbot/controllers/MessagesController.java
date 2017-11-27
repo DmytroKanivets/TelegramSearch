@@ -1,7 +1,7 @@
 package com.kpi.searchbot.controllers;
 
-import com.kpi.searchbot.entity.Message;
-import com.kpi.searchbot.entity.SearchCriteria;
+import com.kpi.searchbot.entity.internal.Message;
+import com.kpi.searchbot.entity.internal.SearchCriteria;
 import com.kpi.searchbot.services.data.MessageRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
