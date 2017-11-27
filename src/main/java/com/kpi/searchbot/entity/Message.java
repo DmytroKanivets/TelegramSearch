@@ -11,6 +11,7 @@ import javax.persistence.Id;
 public class Message {
     @Id
     private String id;
+    private String channel;
     private String author;
     private String body;
 

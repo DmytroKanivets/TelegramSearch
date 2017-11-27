@@ -1,11 +1,12 @@
-package com.kpi.searchbot.frontend.controllers;
+package com.kpi.searchbot.controllers;
 
 import com.kpi.searchbot.entity.Message;
+import com.kpi.searchbot.entity.SearchCriteria;
 import com.kpi.searchbot.services.data.MessageRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/message")
@@ -17,11 +18,6 @@ public class MessagesController {
         this.repository = repository;
     }
 
-    @GetMapping("/")
-    public Iterable<Message> getAll() {
-        return repository.findAll();
-    }
-
     @GetMapping("/{id}")
     public Message getById(@PathVariable String id) {
         return repository.findOne(id);
@@ -30,13 +26,14 @@ public class MessagesController {
     @PutMapping("/")
     public void create(@RequestBody Message message) {
         if (message.getId() == null) {
-            message.setId(String.valueOf(message.hashCode()));
+            message.setId(UUID.randomUUID().toString());
         }
+        repository.save(message);
     }
 
-    @GetMapping("/search")
-    public Iterable<Message> findByBody(@RequestParam("body") String body) {
-        return repository.findByBodyContainingIgnoreCase(body);
+    @PostMapping("/")
+    public Iterable<Message> findByBody(@RequestBody SearchCriteria body) {
+        return repository.findAll(body.buildSpecification());
     }
 
 }
