@@ -1,0 +1,7 @@
+[role=button], button {
+     cursor:pointer
+ }
+
+.btn-light {
+    border: 1px solid rgb(206, 212, 218) !important;
+}
