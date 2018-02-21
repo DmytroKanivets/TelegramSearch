@@ -12,7 +12,7 @@
         <module>core</module>
         <module>webserver-spring</module>
         <module>db-memory</module>
-        <module>messages-loader-telegram</module>
+        <!--<module>messages-loader-telegram</module>-->
     </modules>
 
     <properties>
