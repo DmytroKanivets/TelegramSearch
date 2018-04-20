@@ -9,7 +9,9 @@ public interface MessageService {
     void index(Message message);
     void indexAll(Iterable<Message> messages);
 
+    @Deprecated
     List<Message> search(SearchCriteria criteria);
+    List<Message> search(SearchCriteria criteria, Long offset, Long limit);
     List<Message> getAll();
     Message getById(String id);
 

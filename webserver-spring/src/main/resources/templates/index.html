@@ -13,7 +13,7 @@
     <link rel="stylesheet" href="/resources/css/main.css"/>
 </head>
 <body>
-<div class="container justify-content-center">
+<div class="container justify-content-center" id="main">
     <div class="col-md-8 offset-md-2">
         <div class="row mb-4">
             <div class="col-md-12">
@@ -46,13 +46,13 @@
 
     <div id="search-results-container">
         <!--Generated block-->
-        <div class="row d-none">
+        <div class="row" v-for="message in messages">  <!-- class 'd-none' -->
             <div class="col-md-12">
                 <div class="card mb-3">
                     <div class="card-body">
-                        <h5 class="card-title"> Some title</h5>
-                        <p class="card-text">some value here</p>
-                        <p class="card-text text-muted">author</p>
+                        <h5 class="card-title">{{message.channel}}</h5>
+                        <p class="card-text">{{message.body}}</p>
+                        <p class="card-text text-muted">{{message.author}}</p>
                     </div>
                 </div>
             </div>
@@ -68,6 +68,20 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.3/umd/popper.min.js"></script>
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/js/bootstrap.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.0/bootstrap3-editable/js/bootstrap-editable.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/vue@2.5.16/dist/vue.js"></script>
+
+<script>
+    var state = {};
+    var data = {
+        messages: [],
+        test: "test here!"
+    };
+    var vm = new Vue({
+        el: "#main",
+        data: data
+    });
+</script>
+
 
 <script>
     var popover = null;
@@ -129,26 +143,6 @@
         }
     }
 
-    function addSearchResult(message) {
-        var html =  '<div class="row">' +
-                        '<div class="col-md-12">' +
-                            '<div class="card mb-3">' +
-                                '<div class="card-body">' +
-                                    '<h5 class="card-title">' + message.channel + '</h5>' +
-                                    '<p class="card-text">' + message.body +'</p>' +
-                                    '<p class="card-text text-muted">' + message.author + '</p>' +
-                                '</div>' +
-                            '</div>' +
-                        '</div>' +
-                    '</div>';
-        $("#search-results-container").append(html);
-    }
-
-    function displaySearchResults(data) {
-        $("#search-results-container").empty();
-        data.forEach(addSearchResult);
-    }
-
     function getInputString(elementId) {
         var element = $('#' + elementId + '-text:not([empty])');
         if (element.length > 0) {
@@ -168,7 +162,9 @@
         var params = {
             url: '/api/message/',
             data: JSON.stringify(searchParams),
-            success: displaySearchResults
+            success: function(response) {
+                data.messages = response.messages;
+            }
         };
 
         sendJsonPayload(params);

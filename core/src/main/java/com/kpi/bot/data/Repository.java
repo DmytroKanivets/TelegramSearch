@@ -1,16 +1,15 @@
 package com.kpi.bot.data;
 
-import com.kpi.bot.entity.search.SearchCriteria;
+
+import com.kpi.bot.entity.data.Identifiable;
 
 import java.util.List;
 
-public interface Repository<T> {
-    Iterable<T> findByBody(String text);
-    T save(T message);
-    List<T> saveAll(Iterable<T> messages);
+public interface Repository <T extends Identifiable> {
+    T save(T entity);
+    List<T> saveAll(Iterable<T> entities);
     T find(String key);
     List<T> findAll();
-    List<T> findByCriteria(SearchCriteria criteria);
     void delete(String key);
     void deleteAll();
 }

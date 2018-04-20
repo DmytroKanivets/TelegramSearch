@@ -1,56 +1,93 @@
 package com.kpi.bot.services.loader.telegram.database;
 
-import com.kpi.bot.services.loader.telegram.structure.TelegramChat;
-import com.kpi.bot.services.loader.telegram.structure.TelegramUser;
+import com.kpi.bot.data.Repository;
+import com.kpi.bot.services.loader.telegram.structure.Channel;
+import com.kpi.bot.services.loader.telegram.structure.User;
+import lombok.extern.java.Log;
+import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Marker;
 import org.telegram.bot.kernel.database.DatabaseManager;
 import org.telegram.bot.structure.Chat;
 import org.telegram.bot.structure.IUser;
 
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.HashMap;
-import java.util.Scanner;
 import java.util.concurrent.ConcurrentHashMap;
 
-
+@Slf4j
 public class TelegramDatabase implements DatabaseManager {
-    private static Map<Integer, TelegramUser> users = new ConcurrentHashMap<>();
-    private static Map<Integer, Chat> chats = new ConcurrentHashMap<>();
-    private static HashMap<Integer, int[]> differences = new HashMap<>();
 
-    @Override
-    public IUser getUserById(int userId) {
-        return users.get(userId);
-    }
+    private Map<Integer, int[]> differences = new ConcurrentHashMap<>();
+    private Repository<User> userRepository;
+    private Repository<Channel> channelRepository;
 
-    public void addUser(TelegramUser user) {
-        users.put(user.getUserId(), user);
-    }
-
-    public void updateUser(TelegramUser user) {
-        users.put(user.getUserId(), user);
+    public TelegramDatabase(Repository<User> userRepository, Repository<Channel> channelRepository) {
+        this.userRepository = userRepository;
+        this.channelRepository = channelRepository;
     }
 
     @Override
-    public Chat getChatById(int chatId) {
-        return chats.get(chatId);
-    }
+    public @Nullable Chat getChatById(int i) {
 
-    public void addChat(TelegramChat chat) {
-        chats.put(chat.getId(), chat);
-    }
+        Channel channel = channelRepository.find(String.valueOf(i));
+        if (channel != null) {
+            return new Chat() {
+                @Override
+                public int getId() {
+                    return Integer.valueOf(channel.getId());
+                }
 
-    public void updateChat(TelegramChat chat) {
-        chats.put(chat.getId(), chat);
+                @Override
+                public Long getAccessHash() {
+                    return Long.valueOf(channel.getHash());
+                }
+
+                @Override
+                public boolean isChannel() {
+                    return true;
+                }
+            };
+        } else {
+            log.warn("Trying to get Chat with id " + i);
+            return null;
+        }
     }
 
     @Override
-    public synchronized HashMap<Integer, int[]> getDifferencesData() {
+    public @Nullable IUser getUserById(int i) {
+        User user = userRepository.find(String.valueOf(i));
+        if (user != null) {
+            return new IUser() {
+                @Override
+                public int getUserId() {
+                    return Integer.valueOf(user.getId());
+                }
+
+                @Override
+                public Long getUserHash() {
+                    return Long.valueOf(user.getHash());
+                }
+            };
+        } else {
+            log.warn("Trying to get User with id " + i);
+            return null;
+        }
+    }
+
+    @NotNull
+    @Override
+    public Map<Integer, int[]> getDifferencesData() {
         return new HashMap<>(differences);
     }
 
     @Override
-    public synchronized boolean updateDifferencesData(int botId, int pts, int date, int seq) {
+    public boolean updateDifferencesData(int botId, int pts, int date, int seq) {
         int[] oldData = differences.get(botId);
         int[] newData = {pts, date, seq};
         if (Arrays.equals(oldData, newData)) {
@@ -61,8 +98,11 @@ public class TelegramDatabase implements DatabaseManager {
         }
     }
 
-    public String getAuthCode() {
-        System.out.println("Enter auth code");
-        return new Scanner(System.in).next().trim();
+    public Repository<User> getUserRepository() {
+        return userRepository;
+    }
+
+    public Repository<Channel> getChannelRepository() {
+        return channelRepository;
     }
 }

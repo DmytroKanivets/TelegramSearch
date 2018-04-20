@@ -1,6 +1,7 @@
 package com.kpi.bot.services.impl;
 
 import com.kpi.bot.data.Repository;
+import com.kpi.bot.data.SearchableRepository;
 import com.kpi.bot.entity.search.SearchCriteria;
 import com.kpi.bot.entity.data.Message;
 import com.kpi.bot.services.MessageService;
@@ -9,9 +10,9 @@ import java.util.List;
 
 public class MessageServiceImpl implements MessageService {
 
-    private Repository<Message> repository;
+    private SearchableRepository<Message> repository;
 
-    public MessageServiceImpl(Repository<Message> repository) {
+    public MessageServiceImpl(SearchableRepository<Message> repository) {
         this.repository = repository;
     }
 
@@ -28,6 +29,11 @@ public class MessageServiceImpl implements MessageService {
     @Override
     public List<Message> search(SearchCriteria criteria) {
         return repository.findByCriteria(criteria);
+    }
+
+    @Override
+    public List<Message> search(SearchCriteria criteria, Long offset, Long limit) {
+        return repository.findByCriteria(criteria, offset, limit);
     }
 
     @Override
