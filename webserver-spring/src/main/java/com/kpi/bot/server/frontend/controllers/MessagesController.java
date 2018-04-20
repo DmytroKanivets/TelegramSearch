@@ -3,16 +3,18 @@ package com.kpi.bot.server.frontend.controllers;
 import com.kpi.bot.entity.search.SearchCriteria;
 import com.kpi.bot.entity.data.Message;
 import com.kpi.bot.entity.search.SearchPredicate;
-import com.kpi.bot.server.frontend.data.SearchParams;
+import com.kpi.bot.server.frontend.data.ResponseBuilder;
+import com.kpi.bot.server.frontend.data.SearchRequest;
+import com.kpi.bot.utils.StringUtils;
 import com.kpi.bot.services.MessageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.UUID;
-
 @RestController
 @RequestMapping("/api/message")
 public class MessagesController {
+    private static final long MAX_MESSAGES_SIZE = 100;
+
     private MessageService service;
 
     @Autowired
@@ -25,31 +27,30 @@ public class MessagesController {
         return service.getById(id);
     }
 
-    @PutMapping("/")
-    public void create(@RequestBody Message message) {
-        if (message.getId() == null) {
-            message.setId(UUID.randomUUID().toString());
-        }
-        service.index(message);
-    }
-
-    private boolean notEmpty(String s) {
-        return s != null && s.length() > 0;
-    }
-
-    @PostMapping("/")
-    public Iterable<Message> findByBody(@RequestBody SearchParams params) {
+    @PostMapping
+    public Object findByBody(@RequestBody SearchRequest params) {
         SearchCriteria criteria = new SearchCriteria();
-        if (notEmpty(params.getBody())) {
+        if (StringUtils.notEmpty(params.getBody())) {
             criteria.addPredicate(SearchPredicate.LIKE("body", params.getBody()));
         }
-        if (notEmpty(params.getAuthor())) {
+        if (StringUtils.notEmpty(params.getAuthor())) {
             criteria.addPredicate(SearchPredicate.EQUALS("author", params.getAuthor()));
         }
-        if (notEmpty(params.getChannel())) {
+        if (StringUtils.notEmpty(params.getChannel())) {
             criteria.addPredicate(SearchPredicate.EQUALS("channel", params.getChannel()));
         }
-        return service.search(criteria);
+
+        long offset = 0;
+        if (params.getOffset() != null && params.getOffset() >= 0) {
+            offset = params.getOffset();
+        }
+
+        long limit = MAX_MESSAGES_SIZE;
+        if (params.getLimit() != null && params.getLimit() > 0 && params.getLimit() <= MAX_MESSAGES_SIZE) {
+            limit = params.getLimit();
+        }
+
+        return ResponseBuilder.OK().add("messages", service.search(criteria, offset, limit)).build();
     }
 
 }

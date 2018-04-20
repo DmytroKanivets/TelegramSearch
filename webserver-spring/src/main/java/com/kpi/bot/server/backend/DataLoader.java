@@ -27,7 +27,7 @@ public class DataLoader {
         Comment[] comments = new RestTemplate().getForObject(DATA_LOCATION, Comment[].class);
         List<Message> messages = new LinkedList<>();
         for (Comment comment : comments) {
-            messages.add(new Message(String.valueOf(comment.getId()), comment.getName(), comment.getEmail(), comment.getBody().replace("\n", "")));
+//            messages.add(new Message(String.valueOf(comment.getId()), comment.getName(), comment.getEmail(), comment.getBody().replace("\n", "")));
         }
         service.indexAll(messages);
     }
