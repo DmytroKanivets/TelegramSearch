@@ -10,7 +10,7 @@ import org.springframework.context.annotation.PropertySource;
 import org.springframework.context.annotation.Scope;
 
 @Configuration
-@PropertySource("classpath:/telegram.properties")
+//@PropertySource("classpath:/telegram.properties")
 public class TelegramClientFactory {
 
     private DatabaseFactory factory;
