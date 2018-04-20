@@ -1,0 +1,1 @@
+web: java -jar ./webserver-spring/target/webserver-spring-1.0.jar
