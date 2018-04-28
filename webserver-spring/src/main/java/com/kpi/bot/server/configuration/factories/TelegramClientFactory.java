@@ -1,7 +1,12 @@
 package com.kpi.bot.server.configuration.factories;
 
+import com.kpi.bot.data.Repository;
+import com.kpi.bot.data.SearchableRepository;
+import com.kpi.bot.entity.data.Message;
 import com.kpi.bot.services.loader.telegram.TelegramClient;
 import com.kpi.bot.services.loader.telegram.TelegramConfiguration;
+import com.kpi.bot.services.loader.telegram.structure.Channel;
+import com.kpi.bot.services.loader.telegram.structure.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -14,7 +19,6 @@ import org.springframework.context.annotation.Scope;
 public class TelegramClientFactory {
 
     private DatabaseFactory factory;
-
     @Value("${telegram.api.key}")
     private Integer apiKey;
     @Value("${telegram.api.hash}")
@@ -32,15 +36,10 @@ public class TelegramClientFactory {
         }
     }
 
-    @Autowired
-    public TelegramClientFactory(DatabaseFactory factory) {
-        this.factory = factory;
-    }
-
     @Bean
     @Scope("singleton")
-    public TelegramClient getTelegramClient(TelegramConfiguration configuration) {
-        return new TelegramClient(configuration, factory.createMessageRepository(), factory.createUserRepository(), factory.createChannelRepository());
+    public TelegramClient getTelegramClient(TelegramConfiguration configuration, SearchableRepository<Message> messageRepository, Repository<User> userRepository, Repository<Channel> channelRepository) {
+        return new TelegramClient(configuration, messageRepository, userRepository, channelRepository);
 
     }
 

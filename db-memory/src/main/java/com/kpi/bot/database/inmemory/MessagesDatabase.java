@@ -21,10 +21,10 @@ public class MessagesDatabase extends Database<Message> implements SearchableRep
         return super.save(message);
     }
 
-    private Predicate<String> createStringPredicate(SearchPredicate predicate) {
-        return s -> {
-            if (predicate.getValue() == null) {
-                return (predicate.getType().equals(SearchType.EQUALS) || predicate.getType().equals(SearchType.LIKE))
+    private Predicate<String> createStringPredicate(SearchPredicate search) {
+        Predicate<String> predicate = s -> {
+            if (search.getValue() == null) {
+                return (search.getType().equals(SearchType.EQUALS) || search.getType().equals(SearchType.LIKE))
                     && s == null;
             }
 
@@ -32,23 +32,28 @@ public class MessagesDatabase extends Database<Message> implements SearchableRep
                 return false;
             }
 
-            switch (predicate.getType()) {
+            switch (search.getType()) {
                 case EQUALS:
-                    return predicate.getValue().toString().equals(s);
+                    return search.getValue().toString().equals(s);
                 case HIGHER:
-                    return predicate.getValue().toString().compareTo(s) < 0;
+                    return search.getValue().toString().compareTo(s) < 0;
                 case LOWER:
-                    return predicate.getType().toString().compareTo(s) > 0;
+                    return search.getType().toString().compareTo(s) > 0;
                 case LIKE:
-                    if (predicate.getValue() instanceof Pattern) {
-                        return ((Pattern) predicate.getValue()).matcher(s).matches();
+                    if (search.getValue() instanceof Pattern) {
+                        return ((Pattern) search.getValue()).matcher(s).matches();
                     } else {
-                        return s.contains(predicate.getValue().toString());
+                        return s.contains(search.getValue().toString());
                     }
                 default:
-                    throw new RuntimeException("Can not find matching type for " + predicate.getType());
+                    throw new RuntimeException("Can not find matching type for " + search.getType());
             }
         };
+        if (!search.isMatch()) {
+            predicate = predicate.negate();
+        }
+
+        return predicate;
     }
 
     private Predicate<Message> buildPredicate(SearchCriteria criteria) {
@@ -71,11 +76,6 @@ public class MessagesDatabase extends Database<Message> implements SearchableRep
         }
 
         return result;
-    }
-
-    @Override
-    public List<Message> findByCriteria(SearchCriteria criteria) {
-        return findAll().stream().filter(buildPredicate(criteria)).collect(Collectors.toList());
     }
 
     @Override

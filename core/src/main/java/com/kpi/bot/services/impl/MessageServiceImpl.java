@@ -27,11 +27,6 @@ public class MessageServiceImpl implements MessageService {
     }
 
     @Override
-    public List<Message> search(SearchCriteria criteria) {
-        return repository.findByCriteria(criteria);
-    }
-
-    @Override
     public List<Message> search(SearchCriteria criteria, Long offset, Long limit) {
         return repository.findByCriteria(criteria, offset, limit);
     }

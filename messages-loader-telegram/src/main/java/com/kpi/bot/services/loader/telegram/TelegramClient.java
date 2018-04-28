@@ -91,9 +91,9 @@ public class TelegramClient implements MessageLoader {
     private Set<String> joinedChannels = new HashSet<String>() {{
         //TODO remove testing channels
         this.add("130666341"); //self
-        this.add("1313299544"); //Test test - you can not see your own messages
+//        this.add("1313299544"); //Test test - you can not see your own messages
         this.add("1006882458"); //KPI Live
-        this.add("1039334478"); //ФИВТonline chat
+//        this.add("1039334478"); //ФИВТonline chat
         this.add("1141640476"); //КПИ discuss
 
     }};
