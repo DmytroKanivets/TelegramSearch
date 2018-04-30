@@ -11,7 +11,7 @@ import java.io.Serializable;
 public abstract class BotConfig implements Serializable {
     private boolean isRegistered; ///< Whether the bot was registered or not
     private String hashCode;
-    private String authfile = ""; ///< Authfile to store login information
+    private String authfile; ///< Authfile to store login information
 
 
     public boolean isRegistered() {
@@ -23,7 +23,7 @@ public abstract class BotConfig implements Serializable {
     }
 
     public String getAuthfile() {
-        return authfile;
+        return authfile != null ? authfile : System.currentTimeMillis() + ".tmp";
     }
 
     public void setAuthfile(String authfile) {

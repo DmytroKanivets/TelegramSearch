@@ -224,7 +224,7 @@ public class KernelAuth {
                         result =  LoginStatus.BOTLOGIN;
                     }
                 } catch (RpcException e) {
-                    BotLogger.severe(LOGTAG, e);
+                    BotLogger.error(LOGTAG, e);
                 } catch (TimeoutException e) {
                     BotLogger.error(LOGTAG, e);
                 }

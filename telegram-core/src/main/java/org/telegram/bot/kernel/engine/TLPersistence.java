@@ -39,13 +39,13 @@ public class TLPersistence<T extends TLObject> extends TLContext {
         writer = new SafeFileWriter(fileName);
         byte[] data = writer.loadData();
 
-        BotLogger.warning(LOGTAG, "Loaded state in " + (System.currentTimeMillis() - start) + " ms");
+        BotLogger.warn(LOGTAG, "Loaded state in " + (System.currentTimeMillis() - start) + " ms");
         if (data != null) {
             try {
                 ByteArrayInputStream stream = new ByteArrayInputStream(data);
                 obj = (T) this.deserializeMessage(stream);
             } catch (IOException e) {
-                BotLogger.warning(LOGTAG, e);
+                BotLogger.warn(LOGTAG, e);
             }
         }
 
@@ -79,7 +79,7 @@ public class TLPersistence<T extends TLObject> extends TLContext {
             stream.close();
             writer.saveData(stream.toByteArray());
         } catch (IOException e) {
-            BotLogger.warning(LOGTAG, e);
+            BotLogger.warn(LOGTAG, e);
         }
     }
 
