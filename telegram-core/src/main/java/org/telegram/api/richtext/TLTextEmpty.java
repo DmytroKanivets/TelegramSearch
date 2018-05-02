@@ -1,7 +1,5 @@
 package org.telegram.api.richtext;
 
-import org.telegram.tl.TLObject;
-
 /**
  * @author Ruben Bermudez
  * @version 1.0

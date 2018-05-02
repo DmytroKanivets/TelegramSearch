@@ -1,7 +1,5 @@
 package org.telegram.api.phone.call.discardreason;
 
-import org.telegram.tl.TLObject;
-
 /**
  * @author Ruben Bermudez
  * @version 1.0

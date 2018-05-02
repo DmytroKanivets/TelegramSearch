@@ -2,13 +2,9 @@ package com.kpi.bot.services.loader.telegram.database;
 
 import com.kpi.bot.data.Repository;
 import com.kpi.bot.services.loader.telegram.structure.User;
-import org.telegram.api.contacts.TLResolvedPeer;
 import org.telegram.api.engine.TelegramApi;
-import org.telegram.api.functions.contacts.TLRequestContactsResolveUsername;
 import org.telegram.api.functions.users.TLRequestUsersGetFullUser;
-import org.telegram.api.input.user.TLAbsInputUser;
 import org.telegram.api.input.user.TLInputUser;
-import org.telegram.api.user.TLAbsUser;
 import org.telegram.api.user.TLUserFull;
 
 import java.io.IOException;

@@ -1,5 +1,8 @@
 package org.telegram.mtproto.transport;
 
+import jawnae.pyronet.PyroClient;
+import jawnae.pyronet.PyroClientListener;
+import jawnae.pyronet.PyroSelector;
 import org.telegram.mtproto.MTProto;
 import org.telegram.mtproto.log.Logger;
 
@@ -11,10 +14,6 @@ import java.nio.ByteOrder;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.atomic.AtomicInteger;
-
-import jawnae.pyronet.PyroClient;
-import jawnae.pyronet.PyroClientListener;
-import jawnae.pyronet.PyroSelector;
 
 public class TcpContext implements PyroClientListener {
     private static volatile Integer nextChannelToken = 1;

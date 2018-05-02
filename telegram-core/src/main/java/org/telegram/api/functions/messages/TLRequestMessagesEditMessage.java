@@ -4,11 +4,7 @@ import org.telegram.api.input.peer.TLAbsInputPeer;
 import org.telegram.api.keyboard.replymarkup.TLAbsReplyMarkup;
 import org.telegram.api.message.entity.TLAbsMessageEntity;
 import org.telegram.api.updates.TLAbsUpdates;
-import org.telegram.tl.StreamingUtils;
-import org.telegram.tl.TLContext;
-import org.telegram.tl.TLMethod;
-import org.telegram.tl.TLObject;
-import org.telegram.tl.TLVector;
+import org.telegram.tl.*;
 
 import java.io.IOException;
 import java.io.InputStream;

@@ -13,12 +13,7 @@ import java.io.IOException;
 import java.util.Random;
 import java.util.zip.CRC32;
 
-import static org.telegram.tl.StreamingUtils.readBytes;
-import static org.telegram.tl.StreamingUtils.readInt;
-import static org.telegram.tl.StreamingUtils.readLong;
-import static org.telegram.tl.StreamingUtils.writeByteArray;
-import static org.telegram.tl.StreamingUtils.writeInt;
-import static org.telegram.tl.StreamingUtils.writeLong;
+import static org.telegram.tl.StreamingUtils.*;
 
 /**
  * Created: 23.08.13 1:46

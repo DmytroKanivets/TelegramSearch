@@ -1,7 +1,10 @@
 package org.telegram.api.functions.bots;
 
 import org.telegram.api.TLDataJSON;
-import org.telegram.tl.*;
+import org.telegram.tl.StreamingUtils;
+import org.telegram.tl.TLContext;
+import org.telegram.tl.TLMethod;
+import org.telegram.tl.TLObject;
 
 import java.io.IOException;
 import java.io.InputStream;

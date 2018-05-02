@@ -9,12 +9,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-import static org.telegram.tl.StreamingUtils.readBytes;
-import static org.telegram.tl.StreamingUtils.readLong;
-import static org.telegram.tl.StreamingUtils.readTLBytes;
-import static org.telegram.tl.StreamingUtils.writeByteArray;
-import static org.telegram.tl.StreamingUtils.writeLong;
-import static org.telegram.tl.StreamingUtils.writeTLBytes;
+import static org.telegram.tl.StreamingUtils.*;
 
 /**
  * Created with IntelliJ IDEA.

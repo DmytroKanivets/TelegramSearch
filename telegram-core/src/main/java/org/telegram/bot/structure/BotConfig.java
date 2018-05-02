@@ -23,7 +23,8 @@ public abstract class BotConfig implements Serializable {
     }
 
     public String getAuthfile() {
-        return authfile != null ? authfile : System.currentTimeMillis() + ".tmp";
+        return authfile == null ? "" : authfile;
+//        return authfile != null ? authfile : System.currentTimeMillis() + ".tmp";
     }
 
     public void setAuthfile(String authfile) {

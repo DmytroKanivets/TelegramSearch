@@ -8,10 +8,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-import static org.telegram.tl.StreamingUtils.readTLLongVector;
-import static org.telegram.tl.StreamingUtils.readTLString;
-import static org.telegram.tl.StreamingUtils.writeTLString;
-import static org.telegram.tl.StreamingUtils.writeTLVector;
+import static org.telegram.tl.StreamingUtils.*;
 
 /**
  * @author Ruben Bermudez

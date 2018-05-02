@@ -9,21 +9,7 @@ import org.telegram.mtproto.secure.Keys;
 import org.telegram.mtproto.secure.pq.PQSolver;
 import org.telegram.mtproto.state.ConnectionInfo;
 import org.telegram.mtproto.time.TimeOverlord;
-import org.telegram.mtproto.tl.pq.ClientDhInner;
-import org.telegram.mtproto.tl.pq.DhGenFailure;
-import org.telegram.mtproto.tl.pq.DhGenOk;
-import org.telegram.mtproto.tl.pq.DhGenResult;
-import org.telegram.mtproto.tl.pq.DhGenRetry;
-import org.telegram.mtproto.tl.pq.PQInner;
-import org.telegram.mtproto.tl.pq.ReqDhParams;
-import org.telegram.mtproto.tl.pq.ReqPQ;
-import org.telegram.mtproto.tl.pq.ReqSetDhClientParams;
-import org.telegram.mtproto.tl.pq.ResPQ;
-import org.telegram.mtproto.tl.pq.ServerDhFailure;
-import org.telegram.mtproto.tl.pq.ServerDhInner;
-import org.telegram.mtproto.tl.pq.ServerDhOk;
-import org.telegram.mtproto.tl.pq.ServerDhParams;
-import org.telegram.mtproto.tl.pq.TLInitContext;
+import org.telegram.mtproto.tl.pq.*;
 import org.telegram.mtproto.transport.ConnectionType;
 import org.telegram.mtproto.transport.PlainTcpConnection;
 import org.telegram.mtproto.transport.TransportRate;
@@ -35,23 +21,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.math.BigInteger;
 
-import static org.telegram.mtproto.secure.CryptoUtils.AES256IGEDecrypt;
-import static org.telegram.mtproto.secure.CryptoUtils.AES256IGEEncrypt;
-import static org.telegram.mtproto.secure.CryptoUtils.SHA1;
-import static org.telegram.mtproto.secure.CryptoUtils.align;
-import static org.telegram.mtproto.secure.CryptoUtils.alignKeyZero;
-import static org.telegram.mtproto.secure.CryptoUtils.arrayEq;
-import static org.telegram.mtproto.secure.CryptoUtils.concat;
-import static org.telegram.mtproto.secure.CryptoUtils.fromBigInt;
-import static org.telegram.mtproto.secure.CryptoUtils.loadBigInt;
-import static org.telegram.mtproto.secure.CryptoUtils.substring;
-import static org.telegram.mtproto.secure.CryptoUtils.xor;
-import static org.telegram.tl.StreamingUtils.readBytes;
-import static org.telegram.tl.StreamingUtils.readInt;
-import static org.telegram.tl.StreamingUtils.readLong;
-import static org.telegram.tl.StreamingUtils.writeByteArray;
-import static org.telegram.tl.StreamingUtils.writeInt;
-import static org.telegram.tl.StreamingUtils.writeLong;
+import static org.telegram.mtproto.secure.CryptoUtils.*;
+import static org.telegram.tl.StreamingUtils.*;
 
 /**
  * Created with IntelliJ IDEA.

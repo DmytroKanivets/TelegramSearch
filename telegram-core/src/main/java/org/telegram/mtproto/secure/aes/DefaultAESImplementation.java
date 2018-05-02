@@ -2,12 +2,7 @@ package org.telegram.mtproto.secure.aes;
 
 import org.telegram.mtproto.secure.KeyParameter;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
 
 import static org.telegram.mtproto.secure.CryptoUtils.substring;
 

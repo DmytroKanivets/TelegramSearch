@@ -3,7 +3,10 @@ package com.kpi.bot.server.frontend.controllers.admin;
 import com.kpi.bot.server.frontend.data.ResponseBuilder;
 import com.kpi.bot.services.loader.telegram.TelegramConfiguration;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/admin/telegram")

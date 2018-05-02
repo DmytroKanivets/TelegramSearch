@@ -5,7 +5,8 @@ import com.kpi.bot.data.SearchableRepository;
 import com.kpi.bot.entity.data.Identifiable;
 import com.kpi.bot.entity.search.SearchCriteria;
 import com.kpi.bot.entity.search.SearchPredicate;
-import org.apache.lucene.analysis.standard.StandardAnalyzer;
+import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.analysis.ru.RussianAnalyzer;
 import org.apache.lucene.document.*;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexWriter;
@@ -25,12 +26,14 @@ public class LuceneDatabase<T extends Identifiable> implements SearchableReposit
 
     private static final String ID_FIELD_NAME = "id";
     private StorageStrategy storageStrategy = StorageStrategy.MEMORY;
+    private Analyzer analyzer = new RussianAnalyzer();
 
     private Set<String> indexedFields;
     private Set<String> fullTextSearchFields;
     private Repository<T> backingRepository;
     private IndexWriter writer;
     private IndexSearcher searcher;
+    private volatile boolean searcherUpToDate = false;
 
     public LuceneDatabase(Repository<T> backingRepository, List<String> indexedFields, List<String> fullTextSearchFields) {
         this.backingRepository = backingRepository;
@@ -40,12 +43,9 @@ public class LuceneDatabase<T extends Identifiable> implements SearchableReposit
 
         try {
             Directory directory = storageStrategy.getDirectory();
-
-            StandardAnalyzer analyzer = new StandardAnalyzer();
             IndexWriterConfig writerConfig = new IndexWriterConfig(analyzer);
             this.writer = new IndexWriter(directory, writerConfig);
-            writer.commit();
-            this.searcher = new IndexSearcher(DirectoryReader.open(directory));
+            this.writer.commit();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -62,28 +62,32 @@ public class LuceneDatabase<T extends Identifiable> implements SearchableReposit
                 for (java.lang.reflect.Field objectField : cls.getDeclaredFields()) {
                     Class<?> type = objectField.getType();
                     objectField.setAccessible(true);
-                    if (fullTextSearchFields.contains(objectField.getName())) {
-                        if (type.isAssignableFrom(CharSequence.class)) {
-                            document.add(new TextField(objectField.getName(), objectField.get(object).toString(), Field.Store.NO));
-                        }
-                    } else if (indexedFields.contains(objectField.getName())) {
-                        if (type.isAssignableFrom(Collection.class)) {
-                            try {
-                                Class<?> elementType = (Class<?>) ((ParameterizedType) objectField.getGenericType()).getActualTypeArguments()[0];
-                                IndexableFieldFactory factory = IndexableFieldFactory.getIndexableFieldFactory(elementType);
-                                Collection collection = (Collection) objectField.get(object);
-                                for (Object item : collection) {
-                                    document.add(factory.getField(objectField.getName(), item));
-                                }
-                            } catch (ClassCastException e) {
-                                throw new RuntimeException("Can not determine generic type for field " + objectField.getName(), e);
+                    Object fieldValue = objectField.get(object);
+                    if (fieldValue != null) {
+                        if (fullTextSearchFields.contains(objectField.getName())) {
+                            if (CharSequence.class.isAssignableFrom(type)) {
+                                document.add(new TextField(objectField.getName(), fieldValue.toString(), Field.Store.NO));
                             }
-                        } else {
-                            document.add(IndexableFieldFactory.getIndexableFieldFactory(type).getField(objectField.getName(), objectField.get(object)));
-                            System.out.println("Indexed field!");
+                        } else if (indexedFields.contains(objectField.getName())) {
+                            if (type.isAssignableFrom(Collection.class)) {
+                                try {
+                                    Class<?> elementType = (Class<?>) ((ParameterizedType) objectField.getGenericType()).getActualTypeArguments()[0];
+                                    IndexableFieldFactory factory = IndexableFieldFactory.getIndexableFieldFactory(elementType);
+                                    Collection collection = (Collection) fieldValue;
+                                    for (Object item : collection) {
+                                        document.add(factory.getField(objectField.getName(), item));
+                                    }
+                                } catch (ClassCastException e) {
+                                    throw new RuntimeException("Can not determine generic type for field " + objectField.getName(), e);
+                                }
+                            } else {
+                                document.add(IndexableFieldFactory.getIndexableFieldFactory(type).getField(objectField.getName(), fieldValue));
+                            }
                         }
                     }
                 }
+
+                cls = cls.getSuperclass();
             }
 
             return document;
@@ -92,13 +96,47 @@ public class LuceneDatabase<T extends Identifiable> implements SearchableReposit
         }
     }
 
+    private void commitWrite() {
+        try {
+            writer.commit();
+            if (searcherUpToDate) {
+                searcherUpToDate = false;
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private IndexSearcher getSearcher() {
+        try {
+            if (!searcherUpToDate) {
+                synchronized (this) {
+                    if (!searcherUpToDate) {
+                        searcher = new IndexSearcher(DirectoryReader.open(writer.getDirectory()));
+                        searcherUpToDate = true;
+                    }
+                }
+            }
+            return searcher;
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     @Override
     public T save(T entity) {
         try {
-            delete(entity.getId());
+            if (backingRepository.find(entity.getId()) != null) {
+                backingRepository.delete(entity.getId());
+                Term term = new Term(ID_FIELD_NAME, entity.getId());
+                writer.deleteDocuments(term);
+            }
+
             writer.addDocument(transformToDocument(entity));
-            writer.commit();
             backingRepository.save(entity);
+
+            commitWrite();
+
             return entity;
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -107,7 +145,8 @@ public class LuceneDatabase<T extends Identifiable> implements SearchableReposit
 
     @Override
     public List<T> saveAll(Iterable<T> entities) {
-        List<T> results = new LinkedList<T>();
+        List<T> results = new LinkedList<>();
+
         for (T entity: entities) {
             results.add(save(entity));
         }
@@ -131,7 +170,7 @@ public class LuceneDatabase<T extends Identifiable> implements SearchableReposit
             backingRepository.delete(key);
             Term term = new Term(ID_FIELD_NAME, key);
             writer.deleteDocuments(term);
-            writer.commit();
+            commitWrite();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -142,7 +181,7 @@ public class LuceneDatabase<T extends Identifiable> implements SearchableReposit
         try {
             backingRepository.deleteAll();
             writer.deleteAll();
-            writer.commit();
+            commitWrite();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -151,9 +190,10 @@ public class LuceneDatabase<T extends Identifiable> implements SearchableReposit
     private List<T> findByQuery(Query query, Long offset, Long limit) {
         TopScoreDocCollector collector = TopScoreDocCollector.create(Math.toIntExact(offset + limit));
         try {
+            IndexSearcher searcher = getSearcher();
             searcher.search(query, collector);
             ScoreDoc[] docs = collector.topDocs().scoreDocs;
-            List<T> results = new LinkedList<T>();
+            List<T> results = new LinkedList<>();
             for (int i = Math.toIntExact(offset); i < offset + limit && i < docs.length; i++) {
                 results.add(backingRepository.find(searcher.doc(docs[i].doc).get(ID_FIELD_NAME)));
             }
@@ -163,26 +203,33 @@ public class LuceneDatabase<T extends Identifiable> implements SearchableReposit
         }
     }
 
+
     @Override
     public List<T> findByCriteria(SearchCriteria criteria, Long offset, Long limit) {
-        try {
-            System.out.println(searcher.getIndexReader().getDocCount("id"));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
         BooleanQuery.Builder query = new BooleanQuery.Builder();
+        query.add(new MatchAllDocsQuery(), BooleanClause.Occur.SHOULD);
         for (SearchPredicate predicate : criteria.getPredicates()) {
             Query fieldQuery;
             switch (predicate.getType()) {
-                case HIGHER:
-                    fieldQuery = TermRangeQuery.newStringRange(predicate.getField(), predicate.getValue().toString(), null, true, true);
+                case LOWER:
+                    if (Double.class.isAssignableFrom(predicate.getValue().getClass()) || Float.class.isAssignableFrom(predicate.getValue().getClass())) {
+                        fieldQuery = DoublePoint.newRangeQuery(predicate.getField(), 0, FormatConverter.toDouble(predicate.getValue()));
+                    } else {
+                        fieldQuery = LongPoint.newRangeQuery(predicate.getField(), 0, FormatConverter.toLong(predicate.getValue()));
+                    }
                     break;
                 case EQUALS:
                     fieldQuery = new TermQuery(new Term(predicate.getField(), predicate.getValue().toString()));
                     break;
-                case LOWER:
-                    fieldQuery = TermRangeQuery.newStringRange(predicate.getField(), null, predicate.getValue().toString(), true, true);
+                case HIGHER:
+                    if (Double.class.isAssignableFrom(predicate.getValue().getClass()) || Float.class.isAssignableFrom(predicate.getValue().getClass())) {
+                        fieldQuery = DoublePoint.newRangeQuery(predicate.getField(), FormatConverter.toDouble(predicate.getValue()), Double.MAX_VALUE);
+                    } else {
+                        fieldQuery = LongPoint.newRangeQuery(predicate.getField(), FormatConverter.toLong(predicate.getValue()), Long.MAX_VALUE);
+                    }
+                    break;
+                case CONTAINS:
+                    fieldQuery = new TermQuery(new Term(predicate.getField(), predicate.getValue().toString()));
                     break;
                 case LIKE:
                     if (fullTextSearchFields.contains(predicate.getField())) {
@@ -210,7 +257,7 @@ public class LuceneDatabase<T extends Identifiable> implements SearchableReposit
 
     public List<T> findByQuery(String query, Long offset, Long limit) {
         try {
-            return findByQuery(new QueryParser("body", new StandardAnalyzer()).parse(query), offset, limit);
+            return findByQuery(new QueryParser("body", analyzer).parse(query), offset, limit);
         } catch (ParseException e) {
             throw new RuntimeException("Can not parse query", e);
         }

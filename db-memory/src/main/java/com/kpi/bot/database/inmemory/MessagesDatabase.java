@@ -1,25 +1,17 @@
 package com.kpi.bot.database.inmemory;
 
 import com.kpi.bot.data.SearchableRepository;
-import com.kpi.bot.entity.search.SearchCriteria;
 import com.kpi.bot.entity.data.Message;
+import com.kpi.bot.entity.search.SearchCriteria;
 import com.kpi.bot.entity.search.SearchPredicate;
 import com.kpi.bot.entity.search.SearchType;
 
-import java.util.*;
+import java.util.List;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class MessagesDatabase extends Database<Message> implements SearchableRepository<Message> {
-
-    @Override
-    public Message save(Message message) {
-        if (message.getId() == null) {
-            message.setId(UUID.randomUUID().toString());
-        }
-        return super.save(message);
-    }
 
     private Predicate<String> createStringPredicate(SearchPredicate search) {
         Predicate<String> predicate = s -> {
@@ -39,6 +31,7 @@ public class MessagesDatabase extends Database<Message> implements SearchableRep
                     return search.getValue().toString().compareTo(s) < 0;
                 case LOWER:
                     return search.getType().toString().compareTo(s) > 0;
+                case CONTAINS:
                 case LIKE:
                     if (search.getValue() instanceof Pattern) {
                         return ((Pattern) search.getValue()).matcher(s).matches();
@@ -81,6 +74,11 @@ public class MessagesDatabase extends Database<Message> implements SearchableRep
     @Override
     public List<Message> findByCriteria(SearchCriteria criteria, Long offset, Long limit) {
         return findAll().stream().filter(buildPredicate(criteria)).skip(offset).limit(limit).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Message> findByQuery(String query, Long offset, Long limit) {
+        throw new RuntimeException("Search by query is not supported");
     }
 
 }

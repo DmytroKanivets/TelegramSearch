@@ -3,21 +3,16 @@ package com.kpi.bot.services.loader.telegram.database;
 import com.kpi.bot.data.Repository;
 import com.kpi.bot.services.loader.telegram.structure.Channel;
 import com.kpi.bot.services.loader.telegram.structure.User;
-import lombok.extern.java.Log;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.slf4j.Marker;
 import org.telegram.bot.kernel.database.DatabaseManager;
 import org.telegram.bot.structure.Chat;
 import org.telegram.bot.structure.IUser;
 
 import java.util.Arrays;
-import java.util.Iterator;
-import java.util.Map;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j

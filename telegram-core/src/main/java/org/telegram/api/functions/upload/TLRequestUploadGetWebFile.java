@@ -2,7 +2,10 @@ package org.telegram.api.functions.upload;
 
 import org.telegram.api.input.paymentapi.TLInputWebFileLocation;
 import org.telegram.api.upload.TLWebFile;
-import org.telegram.tl.*;
+import org.telegram.tl.StreamingUtils;
+import org.telegram.tl.TLContext;
+import org.telegram.tl.TLMethod;
+import org.telegram.tl.TLObject;
 
 import java.io.IOException;
 import java.io.InputStream;

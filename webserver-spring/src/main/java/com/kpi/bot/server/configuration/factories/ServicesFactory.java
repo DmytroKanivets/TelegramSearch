@@ -4,7 +4,6 @@ import com.kpi.bot.data.SearchableRepository;
 import com.kpi.bot.entity.data.Message;
 import com.kpi.bot.services.MessageService;
 import com.kpi.bot.services.impl.MessageServiceImpl;
-import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

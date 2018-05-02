@@ -10,7 +10,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class Database<T extends Identifiable> implements Repository<T> {
 
-    protected Map<String, T> storage = new ConcurrentHashMap<>();
+    private Map<String, T> storage = new ConcurrentHashMap<>();
 
     public T save(T entity) {
         storage.put(entity.getId(), entity);

@@ -2,7 +2,6 @@ package org.telegram.api.richtext;
 
 import org.telegram.tl.StreamingUtils;
 import org.telegram.tl.TLContext;
-import org.telegram.tl.TLObject;
 
 import java.io.IOException;
 import java.io.InputStream;

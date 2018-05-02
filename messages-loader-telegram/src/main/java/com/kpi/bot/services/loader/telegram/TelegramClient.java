@@ -11,11 +11,11 @@ import com.kpi.bot.services.loader.telegram.structure.Channel;
 import com.kpi.bot.services.loader.telegram.structure.JoinInfo;
 import com.kpi.bot.services.loader.telegram.structure.PendingChannels;
 import com.kpi.bot.services.loader.telegram.structure.User;
+import com.kpi.bot.utils.IndexingStatistics;
 import com.kpi.bot.utils.StringUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.telegram.api.channel.TLChannelParticipant;
 import org.telegram.api.channel.TLChannelParticipants;
-import org.telegram.api.channel.filters.TLChannelMessagesFilterEmpty;
 import org.telegram.api.channel.participants.TLAbsChannelParticipant;
 import org.telegram.api.channel.participants.TLChannelParticipantCreator;
 import org.telegram.api.channel.participants.TLChannelParticipantModerator;
@@ -24,59 +24,47 @@ import org.telegram.api.channel.participants.filters.TLChannelParticipantsFilter
 import org.telegram.api.chat.TLAbsChat;
 import org.telegram.api.chat.TLChat;
 import org.telegram.api.chat.channel.TLChannel;
-import org.telegram.api.contacts.TLAbsContacts;
-import org.telegram.api.contacts.TLContacts;
 import org.telegram.api.contacts.TLResolvedPeer;
 import org.telegram.api.engine.RpcException;
 import org.telegram.api.functions.channels.TLRequestChannelsGetParticipant;
 import org.telegram.api.functions.channels.TLRequestChannelsGetParticipants;
 import org.telegram.api.functions.channels.TLRequestChannelsJoinChannel;
-import org.telegram.api.functions.channels.TLRequestChannelsReadHistory;
-import org.telegram.api.functions.contacts.TLRequestContactsGetContacts;
 import org.telegram.api.functions.contacts.TLRequestContactsResolveUsername;
 import org.telegram.api.functions.messages.TLRequestMessagesGetAllChats;
 import org.telegram.api.functions.messages.TLRequestMessagesGetHistory;
 import org.telegram.api.functions.messages.TLRequestMessagesImportChatInvite;
-import org.telegram.api.functions.updates.TLRequestUpdatesGetChannelDifference;
 import org.telegram.api.functions.updates.TLRequestUpdatesGetState;
-import org.telegram.api.functions.users.TLRequestUsersGetUsers;
 import org.telegram.api.input.chat.TLInputChannel;
 import org.telegram.api.input.peer.TLInputPeerChannel;
 import org.telegram.api.input.user.TLInputUser;
 import org.telegram.api.message.TLAbsMessage;
 import org.telegram.api.message.TLMessage;
-import org.telegram.api.message.media.TLMessageMediaDocument;
-import org.telegram.api.message.media.TLMessageMediaPhoto;
 import org.telegram.api.messages.TLAbsMessages;
-import org.telegram.api.peer.TLPeerChannel;
-import org.telegram.api.photo.TLPhoto;
 import org.telegram.api.updates.TLAbsUpdates;
 import org.telegram.api.updates.TLUpdateShortMessage;
 import org.telegram.api.updates.TLUpdates;
 import org.telegram.api.updates.TLUpdatesState;
-import org.telegram.api.updates.channel.differences.TLAbsUpdatesChannelDifferences;
-import org.telegram.api.updates.channel.differences.TLUpdatesChannelDifferences;
-import org.telegram.api.updates.channel.differences.TLUpdatesChannelDifferencesEmpty;
-import org.telegram.api.updates.channel.differences.TLUpdatesChannelDifferencesTooLong;
 import org.telegram.bot.kernel.TelegramBot;
 import org.telegram.bot.kernel.differenceparameters.DifferenceParametersService;
-import org.telegram.bot.services.BotLogger;
 import org.telegram.bot.structure.LoginStatus;
 import org.telegram.tl.TLIntVector;
 
 import java.io.IOException;
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.time.Instant;
-import java.time.LocalDateTime;
-import java.util.*;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 @Slf4j
 public class TelegramClient implements MessageLoader {
+
+    public static String SELF = "130666341";
 
     private TelegramUpdatesHandler updatesHandler;
     private TelegramApiHandler apiHandler;
@@ -89,13 +77,7 @@ public class TelegramClient implements MessageLoader {
 
     private PendingChannels pendingChannels = new PendingChannels();
     private Set<String> joinedChannels = new HashSet<String>() {{
-        //TODO remove testing channels
-        this.add("130666341"); //self
-//        this.add("1313299544"); //Test test - you can not see your own messages
-        this.add("1006882458"); //KPI Live
-//        this.add("1039334478"); //ФИВТonline chat
-        this.add("1141640476"); //КПИ discuss
-
+        this.add(SELF);
     }};
 
     public void stopIndexing(String id) {
@@ -206,56 +188,6 @@ public class TelegramClient implements MessageLoader {
         }
     }
 
-
-/*
-    private void indexHistory(Channel channel, Instant startDate) {
-        kernel.stopBot();
-        try {
-            TLRequestUpdatesGetChannelDifference requestGetChannelDifference = new TLRequestUpdatesGetChannelDifference();
-            requestGetChannelDifference.setFilter(new TLChannelMessagesFilterEmpty());
-            TLInputChannel inputChannel = new TLInputChannel();
-            inputChannel.setChannelId(Integer.valueOf(channel.getId()));
-            inputChannel.setAccessHash(Long.valueOf(channel.getHash()));
-            requestGetChannelDifference.setChannel(inputChannel);
-            TLAbsUpdatesChannelDifferences absDifference = null;
-
-            int pts = 1;
-            do {
-                requestGetChannelDifference.setPts(pts);
-                requestGetChannelDifference.setLimit(100);
-
-                absDifference = kernel.getKernelComm().doRpcCallSync(requestGetChannelDifference);
-                if (absDifference != null) {
-                    if (absDifference instanceof TLUpdatesChannelDifferences) {
-                        kernel.getMainHandler().getUpdatesHandler().onChats(((TLUpdatesChannelDifferences) absDifference).getChats());
-                        kernel.getMainHandler().getUpdatesHandler().onUsers(((TLUpdatesChannelDifferences) absDifference).getUsers());
-                        ((CustomUpdatesHandler)kernel.getMainHandler().getUpdatesHandler()).onTLMessages(((TLUpdatesChannelDifferences) absDifference).getNewMessages());
-                    } else if (absDifference instanceof  TLUpdatesChannelDifferencesTooLong) {
-                        kernel.getMainHandler().getUpdatesHandler().onChats(((TLUpdatesChannelDifferencesTooLong) absDifference).getChats());
-                        kernel.getMainHandler().getUpdatesHandler().onUsers(((TLUpdatesChannelDifferencesTooLong) absDifference).getUsers());
-                        ((CustomUpdatesHandler)kernel.getMainHandler().getUpdatesHandler()).onTLMessages(((TLUpdatesChannelDifferencesTooLong) absDifference).getMessages());
-
-                    }
-
-                    pts = absDifference.getPts();
-                }
-
-                synchronized (this) {
-                    if (absDifference instanceof TLUpdatesChannelDifferencesTooLong) {
-                        this.wait(100L);
-                    }
-                }
-
-            } while (absDifference instanceof TLUpdatesChannelDifferencesTooLong);
-
-            new DifferenceParametersService(new TelegramDatabase(userRepository, channelRepository)).setNewUpdateParams(Integer.parseInt(channel.getId()), pts, 0, 0);
-
-        } catch (InterruptedException | RpcException | ExecutionException e) {
-            throw new RuntimeException(e);
-        }
-        kernel.startBot();
-    }
-*/
     private void indexHistory(Channel channel, Instant startDate) {
         try {
             final int batchSize = 10000;
@@ -295,15 +227,16 @@ public class TelegramClient implements MessageLoader {
             } while (lastMessage != null && lastMessage.getDate() < now.getEpochSecond());
         } catch (ExecutionException | RpcException e) {
             throw new RuntimeException(e);
-        } finally {
-            try {
-                TLRequestUpdatesGetState requestUpdatesGetState = new TLRequestUpdatesGetState();
-                TLUpdatesState response = kernel.getKernelComm().doRpcCallSync(requestUpdatesGetState);
-                new DifferenceParametersService(new TelegramDatabase(userRepository, channelRepository)).setNewUpdateParams(Integer.parseInt(channel.getId()), response.getPts(), response.getSeq(), response.getDate());
-            } catch (ExecutionException | RpcException e) {
-                throw new RuntimeException(e);
-            }
         }
+//        finally {
+//            try {
+//                TLRequestUpdatesGetState requestUpdatesGetState = new TLRequestUpdatesGetState();
+//                TLUpdatesState response = kernel.getKernelComm().doRpcCallSync(requestUpdatesGetState);
+//                new DifferenceParametersService(new TelegramDatabase(userRepository, channelRepository)).setNewUpdateParams(Integer.parseInt(channel.getId()), response.getPts(), response.getSeq(), response.getDate());
+//            } catch (ExecutionException | RpcException e) {
+//                throw new RuntimeException(e);
+//            }
+//        }
     }
 
     private String extractMessageContent(TLMessage tlMessage) {
@@ -330,6 +263,8 @@ public class TelegramClient implements MessageLoader {
     private void indexMessage(TLMessage tlMessage) {
         String messageContent = extractMessageContent(tlMessage);
         if (StringUtils.notEmpty(messageContent)) {
+            long startTime = System.currentTimeMillis();
+
             System.out.println("Indexing message:\n" + messageContent);
             Message message = new Message();
             message.setId(String.valueOf(tlMessage.getId()));
@@ -338,7 +273,11 @@ public class TelegramClient implements MessageLoader {
             if (channel != null) {
                 message.setChannel(channel.getName());
             } else {
-                System.err.println("Can not find channel #" + tlMessage.getChatId());
+                if (String.valueOf(tlMessage.getChatId()).equals(SELF)) {
+                    message.setChannel("SELF");
+                } else {
+                    System.out.println("Can not find channel #" + tlMessage.getChatId());
+                }
             }
 
             int fromId = tlMessage.getFromId() != 0 ? tlMessage.getFromId() : tlMessage.getChatId();
@@ -346,12 +285,15 @@ public class TelegramClient implements MessageLoader {
             if (user != null) {
                 message.setAuthor(user.getUserName());
             } else {
-                System.err.println("Can not find user #" + fromId);
+                System.out.println("Can not find user #" + fromId);
             }
 
             message.setBody(messageContent);
             message.setTimestamp(Instant.ofEpochSecond(tlMessage.getDate()));
             messageRepository.save(message);
+
+            long endTime = System.currentTimeMillis();
+            IndexingStatistics.messageIndexed(message.getChannel(), startTime - endTime);
         }
     }
 

@@ -1,10 +1,6 @@
 package org.telegram.bot.factories;
 
-import org.telegram.api.input.peer.TLAbsInputPeer;
-import org.telegram.api.input.peer.TLInputPeerChannel;
-import org.telegram.api.input.peer.TLInputPeerChat;
-import org.telegram.api.input.peer.TLInputPeerSelf;
-import org.telegram.api.input.peer.TLInputPeerUser;
+import org.telegram.api.input.peer.*;
 import org.telegram.api.input.user.TLAbsInputUser;
 import org.telegram.api.input.user.TLInputUser;
 import org.telegram.api.input.user.TLInputUserSelf;

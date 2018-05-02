@@ -41,3 +41,7 @@ function showErrorMessage(text) {
 function processErrorResponse(data) {
     console.log(data);
 }
+
+function formatDate(date) {
+    return moment(date).format('DD MMM YYYY');
+}
