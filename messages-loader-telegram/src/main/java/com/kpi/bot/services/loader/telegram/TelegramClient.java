@@ -1,17 +1,16 @@
 package com.kpi.bot.services.loader.telegram;
 
 import com.kpi.bot.data.Repository;
-import com.kpi.bot.data.SearchableRepository;
+import com.kpi.bot.entity.data.Channel;
 import com.kpi.bot.entity.data.Message;
+import com.kpi.bot.entity.data.User;
+import com.kpi.bot.services.MessageService;
 import com.kpi.bot.services.loader.MessageLoader;
 import com.kpi.bot.services.loader.telegram.core.ChatUpdatesBuilderImpl;
 import com.kpi.bot.services.loader.telegram.core.CustomUpdatesHandler;
 import com.kpi.bot.services.loader.telegram.database.TelegramDatabase;
-import com.kpi.bot.services.loader.telegram.structure.Channel;
 import com.kpi.bot.services.loader.telegram.structure.JoinInfo;
 import com.kpi.bot.services.loader.telegram.structure.PendingChannels;
-import com.kpi.bot.services.loader.telegram.structure.User;
-import com.kpi.bot.utils.IndexingStatistics;
 import com.kpi.bot.utils.StringUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.telegram.api.channel.TLChannelParticipant;
@@ -33,7 +32,6 @@ import org.telegram.api.functions.contacts.TLRequestContactsResolveUsername;
 import org.telegram.api.functions.messages.TLRequestMessagesGetAllChats;
 import org.telegram.api.functions.messages.TLRequestMessagesGetHistory;
 import org.telegram.api.functions.messages.TLRequestMessagesImportChatInvite;
-import org.telegram.api.functions.updates.TLRequestUpdatesGetState;
 import org.telegram.api.input.chat.TLInputChannel;
 import org.telegram.api.input.peer.TLInputPeerChannel;
 import org.telegram.api.input.user.TLInputUser;
@@ -43,9 +41,7 @@ import org.telegram.api.messages.TLAbsMessages;
 import org.telegram.api.updates.TLAbsUpdates;
 import org.telegram.api.updates.TLUpdateShortMessage;
 import org.telegram.api.updates.TLUpdates;
-import org.telegram.api.updates.TLUpdatesState;
 import org.telegram.bot.kernel.TelegramBot;
-import org.telegram.bot.kernel.differenceparameters.DifferenceParametersService;
 import org.telegram.bot.structure.LoginStatus;
 import org.telegram.tl.TLIntVector;
 
@@ -71,7 +67,9 @@ public class TelegramClient implements MessageLoader {
     private TelegramConfiguration configuration;
     private TelegramBot kernel;
 
-    private SearchableRepository<Message> messageRepository;
+//    private SearchableRepository<Message> messageRepository;
+    private MessageService messageService;
+
     private Repository<User> userRepository;
     private Repository<Channel> channelRepository;
 
@@ -84,9 +82,9 @@ public class TelegramClient implements MessageLoader {
         joinedChannels.remove(id);
     }
 
-    public TelegramClient(TelegramConfiguration configuration, SearchableRepository<Message> messageRepository, Repository<User> userRepository, Repository<Channel> channelRepository) {
+    public TelegramClient(TelegramConfiguration configuration, MessageService messageService, Repository<User> userRepository, Repository<Channel> channelRepository) {
         this.configuration = configuration;
-        this.messageRepository = messageRepository;
+        this.messageService = messageService;
         this.userRepository = userRepository;
         this.channelRepository = channelRepository;
 
@@ -263,8 +261,6 @@ public class TelegramClient implements MessageLoader {
     private void indexMessage(TLMessage tlMessage) {
         String messageContent = extractMessageContent(tlMessage);
         if (StringUtils.notEmpty(messageContent)) {
-            long startTime = System.currentTimeMillis();
-
             System.out.println("Indexing message:\n" + messageContent);
             Message message = new Message();
             message.setId(String.valueOf(tlMessage.getId()));
@@ -290,10 +286,7 @@ public class TelegramClient implements MessageLoader {
 
             message.setBody(messageContent);
             message.setTimestamp(Instant.ofEpochSecond(tlMessage.getDate()));
-            messageRepository.save(message);
-
-            long endTime = System.currentTimeMillis();
-            IndexingStatistics.messageIndexed(message.getChannel(), startTime - endTime);
+            messageService.index(message);
         }
     }
 
@@ -347,7 +340,7 @@ public class TelegramClient implements MessageLoader {
         }
 
         if (status == LoginStatus.ALREADYLOGGED) {
-            loadChannelsInformation();
+//            loadChannelsInformation();
             kernel.startBot();
         } else {
             throw new RuntimeException("Failed to log in: " + status);
@@ -382,11 +375,11 @@ public class TelegramClient implements MessageLoader {
 
         @Override
         public void onUpdatedMessage(TLUpdateShortMessage tlMessage) {
-            Message message = messageRepository.find(String.valueOf(tlMessage.getId()));
+            Message message = messageService.getById(String.valueOf(tlMessage.getId()));
             if (message != null) {
                 System.err.println("Updating message");
                 message.setBody(tlMessage.getMessage());
-                messageRepository.save(message);
+                messageService.updateMessage(message);
             }
         }
     }

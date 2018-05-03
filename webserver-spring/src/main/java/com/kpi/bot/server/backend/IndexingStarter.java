@@ -1,29 +1,37 @@
 package com.kpi.bot.server.backend;
 
-import com.kpi.bot.data.SearchableRepository;
-import com.kpi.bot.database.lucene.LuceneDatabase;
+import com.kpi.bot.entity.data.Channel;
 import com.kpi.bot.entity.data.Message;
+import com.kpi.bot.services.ChannelsService;
+import com.kpi.bot.services.MessageService;
 import com.kpi.bot.services.loader.telegram.TelegramClient;
-import org.apache.catalina.core.ApplicationContext;
-import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.xml.XmlBeanFactory;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Arrays;
+import java.util.UUID;
 
 @Component("singleton")
 public class IndexingStarter {
 
     @Autowired
-    SearchableRepository<Message> database;
+    private MessageService database;
+    @Autowired
+    private ChannelsService service;
 
-//    @PostConstruct
+    @PostConstruct
     private void fillTestData() {
-        database.saveAll(Arrays.asList(
+        for (int i = 1; i < 10; i++) {
+            Channel c = new Channel();
+            c.setId(String.valueOf(i));
+            c.setName("channel " + i);
+            c.setHash(UUID.randomUUID().toString());
+            service.save(c);
+        }
+        database.indexAll(Arrays.asList(
                 Message.builder().id("1").author("me").body("hey hey").channel("channel 1").timestamp(Instant.now().minus(Duration.ofDays(1))).build(),
                 Message.builder().id("2").author("me").body("hey la").channel("channel 2").timestamp(Instant.now().minus(Duration.ofDays(2))).build(),
                 Message.builder().id("3").author("him").body("hey lala").channel("channel 3").timestamp(Instant.now().minus(Duration.ofDays(3))).build(),
@@ -36,10 +44,8 @@ public class IndexingStarter {
 
     @Autowired
     public IndexingStarter(TelegramClient telegramClient) {
-//        fillTestData();
-
 //        BotLogger.setLevel(Level.OFF);
-        new Thread(telegramClient::startListening).start();
+//        new Thread(telegramClient::startListening).start();
     }
 
 

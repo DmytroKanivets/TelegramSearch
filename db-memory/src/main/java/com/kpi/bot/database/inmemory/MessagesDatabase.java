@@ -72,12 +72,12 @@ public class MessagesDatabase extends Database<Message> implements SearchableRep
     }
 
     @Override
-    public List<Message> findByCriteria(SearchCriteria criteria, Long offset, Long limit) {
+    public List<Message> findByCriteria(SearchCriteria criteria, Integer offset, Integer limit) {
         return findAll().stream().filter(buildPredicate(criteria)).skip(offset).limit(limit).collect(Collectors.toList());
     }
 
     @Override
-    public List<Message> findByQuery(String query, Long offset, Long limit) {
+    public List<Message> findByQuery(String query, Integer offset, Integer limit) {
         throw new RuntimeException("Search by query is not supported");
     }
 

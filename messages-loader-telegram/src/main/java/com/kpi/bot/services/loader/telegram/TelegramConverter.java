@@ -1,7 +1,7 @@
 package com.kpi.bot.services.loader.telegram;
 
-import com.kpi.bot.services.loader.telegram.structure.Channel;
-import com.kpi.bot.services.loader.telegram.structure.User;
+import com.kpi.bot.entity.data.Channel;
+import com.kpi.bot.entity.data.User;
 import com.kpi.bot.utils.StringUtils;
 import org.telegram.api.chat.TLAbsChat;
 import org.telegram.api.chat.channel.TLChannel;

@@ -26,6 +26,7 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
         security.authorizeRequests()
                 .antMatchers("/api/admin/**").hasRole("ADMIN")
                 .antMatchers("/admin/**").hasRole("ADMIN")
+                .antMatchers("/admin*").hasRole("ADMIN")
                 .anyRequest().permitAll()
                 .and().httpBasic().realmName(REALM_NAME)//.authenticationEntryPoint(new AuthenticationEntryPoint())
 

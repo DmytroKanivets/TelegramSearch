@@ -23,6 +23,12 @@
     color: #212529 !important;
 }
 
-.editable-clear a {
-    color: #212529 !important;
+.editable-clear {
+    display: none;
+}
+
+.delete-channel {
+    position: absolute;
+    top: 18px;
+    right: 15px;
 }

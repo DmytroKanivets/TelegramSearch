@@ -7,10 +7,11 @@ import java.util.List;
 
 public interface MessageService {
     void index(Message message);
+    void updateMessage(Message message);
     void indexAll(Iterable<Message> messages);
 
-    List<Message> search(SearchCriteria criteria, Long offset, Long limit);
-    List<Message> search(String query, Long offset, Long limit);
+    List<Message> search(SearchCriteria criteria, Integer offset, Integer limit);
+    List<Message> search(String query, Integer offset, Integer limit);
     List<Message> getAll();
     Message getById(String id);
 

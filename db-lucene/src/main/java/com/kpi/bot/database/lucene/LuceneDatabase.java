@@ -187,7 +187,10 @@ public class LuceneDatabase<T extends Identifiable> implements SearchableReposit
         }
     }
 
-    private List<T> findByQuery(Query query, Long offset, Long limit) {
+    private List<T> findByQuery(Query query, Integer offset, Integer limit) {
+        System.out.println(offset);
+        System.out.println(limit);
+        System.out.println(offset + limit);
         TopScoreDocCollector collector = TopScoreDocCollector.create(Math.toIntExact(offset + limit));
         try {
             IndexSearcher searcher = getSearcher();
@@ -205,7 +208,7 @@ public class LuceneDatabase<T extends Identifiable> implements SearchableReposit
 
 
     @Override
-    public List<T> findByCriteria(SearchCriteria criteria, Long offset, Long limit) {
+    public List<T> findByCriteria(SearchCriteria criteria, Integer offset, Integer limit) {
         BooleanQuery.Builder query = new BooleanQuery.Builder();
         query.add(new MatchAllDocsQuery(), BooleanClause.Occur.SHOULD);
         for (SearchPredicate predicate : criteria.getPredicates()) {
@@ -255,7 +258,7 @@ public class LuceneDatabase<T extends Identifiable> implements SearchableReposit
         return findByQuery(query.build(), offset, limit);
     }
 
-    public List<T> findByQuery(String query, Long offset, Long limit) {
+    public List<T> findByQuery(String query, Integer offset, Integer limit) {
         try {
             return findByQuery(new QueryParser("body", analyzer).parse(query), offset, limit);
         } catch (ParseException e) {

@@ -35,4 +35,9 @@ public class Statistics {
     public static List<String> getKeys() {
         return new LinkedList<>(time.keySet());
     }
+
+    public static void remove(String s) {
+        time.remove(s);
+        count.remove(s);
+    }
 }

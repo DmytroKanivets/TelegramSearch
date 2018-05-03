@@ -57,7 +57,7 @@
                 <div class="card mb-3">
                     <div class="card-body">
                         <h5 class="card-title">{{message.header}}</h5>
-                        <p class="card-text" style="white-space: pre-wrap;">{{message.body}}</p>
+                        <p class="card-text text-justify" style="white-space: pre-wrap;">{{message.body}}</p>
                         <p class="card-text text-muted">{{formatDate(message.timestamp)}}</p>
                     </div>
                 </div>
@@ -119,6 +119,7 @@
         $('#author').editable({
             title: 'Enter author',
             type: 'text',
+            highlight: false,
             display: false,
             value: '',
             unsavedclass: null,
@@ -131,6 +132,7 @@
         $('#channel').editable({
             title: 'Enter channel',
             type: 'text',
+            highlight: false,
             display: false,
             value: '',
             unsavedclass: null,
@@ -142,6 +144,8 @@
         $('#date-from').editable({
             title: 'Enter start date',
             type: 'date',
+            clear: 'Clear',
+            highlight: false,
             display: false,
             value: '',
             unsavedclass: null,
@@ -153,6 +157,8 @@
         $('#date-to').editable({
             title: 'Enter end date',
             type: 'date',
+            clear: 'Clear',
+            highlight: false,
             display: false,
             value: '',
             unsavedclass: null,

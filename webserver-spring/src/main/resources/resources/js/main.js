@@ -45,3 +45,7 @@ function processErrorResponse(data) {
 function formatDate(date) {
     return moment(date).format('DD MMM YYYY');
 }
+
+function handleClear(element) {
+    $(element)[0].parentElement.parentElement.parentElement.childNodes[0].childNodes[1].childNodes[0].click();
+}

@@ -1,4 +1,4 @@
-package com.kpi.bot.utils;
+package com.kpi.bot.stats;
 
 import com.kpi.bot.services.Statistics;
 import lombok.AllArgsConstructor;
@@ -26,7 +26,7 @@ public class IndexingStatistics {
         this.statistics = new LinkedList<>();
 
         for (String entry : Statistics.getKeys()) {
-            if (entry.startsWith(CHANNELS_PREFIX)) {
+            if (entry.startsWith(CHANNELS_PREFIX) && !entry.equals(CHANNELS_PREFIX + CHANNELS_ALL)) {
                 String name = entry.substring(CHANNELS_PREFIX.length());
                 statistics.add(new ChannelStatistics(name, Statistics.getTime(entry), Statistics.getCount(entry)));
             }
@@ -44,4 +44,9 @@ public class IndexingStatistics {
     public static IndexingStatistics getIndexingStatistics() {
         return new IndexingStatistics();
     }
+
+    public static void removeChannel(String channel) {
+        Statistics.remove(CHANNELS_PREFIX + channel);
+    }
+
 }

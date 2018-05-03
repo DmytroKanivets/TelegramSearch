@@ -3,9 +3,9 @@ package com.kpi.bot.server.frontend.controllers;
 import com.kpi.bot.entity.data.Message;
 import com.kpi.bot.entity.search.SearchCriteria;
 import com.kpi.bot.entity.search.SearchPredicate;
-import com.kpi.bot.server.frontend.data.QueryRequest;
+import com.kpi.bot.server.frontend.data.search.QueryRequest;
 import com.kpi.bot.server.frontend.data.ResponseBuilder;
-import com.kpi.bot.server.frontend.data.SearchRequest;
+import com.kpi.bot.server.frontend.data.search.ParamsRequest;
 import com.kpi.bot.services.MessageService;
 import com.kpi.bot.utils.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,7 +17,6 @@ import java.time.temporal.ChronoUnit;
 @RestController
 @RequestMapping("/api/message")
 public class MessagesController {
-    private static final long MAX_MESSAGES_SIZE = 100;
 
     private MessageService service;
 
@@ -32,7 +31,7 @@ public class MessagesController {
     }
 
     @PostMapping("/params")
-    public Object findByParams(@RequestBody SearchRequest params) {
+    public Object findByParams(@RequestBody ParamsRequest params) {
         SearchCriteria criteria = new SearchCriteria();
         if (StringUtils.notEmpty(params.getBody())) {
             criteria.addPredicate(SearchPredicate.LIKE("body", params.getBody()));
@@ -42,16 +41,6 @@ public class MessagesController {
         }
         if (StringUtils.notEmpty(params.getChannel())) {
             criteria.addPredicate(SearchPredicate.EQUALS("channel", params.getChannel()));
-        }
-
-        long offset = 0;
-        if (params.getOffset() != null && params.getOffset() >= 0) {
-            offset = params.getOffset();
-        }
-
-        long limit = MAX_MESSAGES_SIZE;
-        if (params.getLimit() != null && params.getLimit() > 0 && params.getLimit() <= MAX_MESSAGES_SIZE) {
-            limit = params.getLimit();
         }
 
         if (params.getStartDate() != null) {
@@ -64,21 +53,11 @@ public class MessagesController {
             criteria.addPredicate(SearchPredicate.LOWER("timestamp", params.getEndDate().plus(Duration.ofDays(1)).truncatedTo(ChronoUnit.DAYS)));
         }
 
-        return ResponseBuilder.OK().add("messages", service.search(criteria, offset, limit)).build();
+        return ResponseBuilder.OK().add("messages", service.search(criteria, params.getOffset(), params.getLimit())).build();
     }
 
     @PostMapping("/query")
     public Object findByParams(@RequestBody QueryRequest params) {
-        long offset = 0;
-        if (params.getOffset() != null && params.getOffset() >= 0) {
-            offset = params.getOffset();
-        }
-
-        long limit = MAX_MESSAGES_SIZE;
-        if (params.getLimit() != null && params.getLimit() > 0 && params.getLimit() <= MAX_MESSAGES_SIZE) {
-            limit = params.getLimit();
-        }
-
-        return ResponseBuilder.OK().add("messages", service.search(params.getQuery(), offset, limit)).build();
+        return ResponseBuilder.OK().add("messages", service.search(params.getQuery(), params.getOffset(), params.getLimit())).build();
     }
 }
