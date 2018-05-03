@@ -5,19 +5,9 @@ import org.telegram.mtproto.log.Logger;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
-import java.util.ListIterator;
+import java.util.*;
 
-import static org.telegram.tl.StreamingUtils.readInt;
-import static org.telegram.tl.StreamingUtils.readLong;
-import static org.telegram.tl.StreamingUtils.readTLString;
-import static org.telegram.tl.StreamingUtils.writeInt;
-import static org.telegram.tl.StreamingUtils.writeLong;
-import static org.telegram.tl.StreamingUtils.writeTLObject;
-import static org.telegram.tl.StreamingUtils.writeTLString;
+import static org.telegram.tl.StreamingUtils.*;
 
 /**
  * Basic vector type in TL language

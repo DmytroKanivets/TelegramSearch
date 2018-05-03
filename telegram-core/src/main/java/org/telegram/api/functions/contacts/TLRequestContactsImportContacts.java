@@ -2,11 +2,7 @@ package org.telegram.api.functions.contacts;
 
 import org.telegram.api.contacts.TLImportedContacts;
 import org.telegram.api.input.TLInputPhoneContact;
-import org.telegram.tl.StreamingUtils;
-import org.telegram.tl.TLContext;
-import org.telegram.tl.TLMethod;
-import org.telegram.tl.TLObject;
-import org.telegram.tl.TLVector;
+import org.telegram.tl.*;
 
 import java.io.IOException;
 import java.io.InputStream;

@@ -9,11 +9,7 @@ package org.telegram.api.contacts;
 
 import org.telegram.api.contact.TLImportedContact;
 import org.telegram.api.user.TLAbsUser;
-import org.telegram.tl.StreamingUtils;
-import org.telegram.tl.TLContext;
-import org.telegram.tl.TLLongVector;
-import org.telegram.tl.TLObject;
-import org.telegram.tl.TLVector;
+import org.telegram.tl.*;
 
 import java.io.IOException;
 import java.io.InputStream;

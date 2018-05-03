@@ -1,10 +1,6 @@
 package org.telegram.tl;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.Serializable;
+import java.io.*;
 
 import static org.telegram.tl.StreamingUtils.readInt;
 import static org.telegram.tl.StreamingUtils.writeInt;

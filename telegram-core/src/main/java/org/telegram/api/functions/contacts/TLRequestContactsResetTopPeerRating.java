@@ -2,11 +2,7 @@ package org.telegram.api.functions.contacts;
 
 import org.telegram.api.input.peer.TLAbsInputPeer;
 import org.telegram.api.toppeer.category.TLAbsTopPeerCategory;
-import org.telegram.tl.StreamingUtils;
-import org.telegram.tl.TLBool;
-import org.telegram.tl.TLContext;
-import org.telegram.tl.TLMethod;
-import org.telegram.tl.TLObject;
+import org.telegram.tl.*;
 
 import java.io.IOException;
 import java.io.InputStream;

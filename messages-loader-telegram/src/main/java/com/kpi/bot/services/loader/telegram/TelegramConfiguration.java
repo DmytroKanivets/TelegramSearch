@@ -3,12 +3,8 @@ package com.kpi.bot.services.loader.telegram;
 import org.telegram.bot.structure.BotConfig;
 
 import java.util.HashSet;
-import java.util.Scanner;
 import java.util.Set;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Semaphore;
 
 public class TelegramConfiguration extends BotConfig {
 

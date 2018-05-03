@@ -57,14 +57,14 @@ public class TimerExecutor {
      * @param targetSec  Second to execute it
      */
     public void startExecutionEveryDayAt(CustomTimerTask task, int targetHour, int targetMin, int targetSec) {
-        BotLogger.warning(LOGTAG, "Posting new task" + task.getTaskName());
+        BotLogger.warn(LOGTAG, "Posting new task" + task.getTaskName());
         final Runnable taskWrapper = () -> {
             try {
                 task.execute();
                 task.reduceTimes();
                 startExecutionEveryDayAt(task, targetHour, targetMin, targetSec);
             } catch (Exception e) {
-                BotLogger.severe(LOGTAG, "Bot threw an unexpected exception at TimerExecutor", e);
+                BotLogger.error(LOGTAG, "Bot threw an unexpected exception at TimerExecutor", e);
             }
         };
         if (task.getTimes() != 0) {
@@ -82,14 +82,14 @@ public class TimerExecutor {
      * @param targetSec  Second to execute it
      */
     public void startExecutionEach(CustomTimerTask task, int targetHour, int targetMin, int targetSec) {
-        BotLogger.warning(LOGTAG, "Posting new task" + task.getTaskName());
+        BotLogger.warn(LOGTAG, "Posting new task" + task.getTaskName());
         final Runnable taskWrapper = () -> {
             try {
                 task.execute();
                 task.reduceTimes();
                 startExecutionEach(task, targetHour, targetMin, targetSec);
             } catch (Exception e) {
-                BotLogger.severe(LOGTAG, "Bot threw an unexpected exception at TimerExecutor", e);
+                BotLogger.error(LOGTAG, "Bot threw an unexpected exception at TimerExecutor", e);
             }
         };
         if (task.getTimes() != 0) {
@@ -158,9 +158,9 @@ public class TimerExecutor {
         try {
             executorService.awaitTermination(1, TimeUnit.DAYS);
         } catch (InterruptedException ex) {
-            BotLogger.severe(LOGTAG, ex);
+            BotLogger.error(LOGTAG, ex);
         } catch (Exception e) {
-            BotLogger.severe(LOGTAG, "Bot threw an unexpected exception at TimerExecutor", e);
+            BotLogger.error(LOGTAG, "Bot threw an unexpected exception at TimerExecutor", e);
         }
     }
 }

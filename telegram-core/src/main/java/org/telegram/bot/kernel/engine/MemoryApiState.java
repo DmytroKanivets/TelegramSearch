@@ -75,7 +75,6 @@ public class MemoryApiState extends TLPersistence<TLStorage> implements AbsApiSt
             key.setAuthorised(true);
             getObj().setUid(user.getId());
             getObj().setPhone(user.getPhone());
-            write();
         }
     }
 
@@ -84,7 +83,6 @@ public class MemoryApiState extends TLPersistence<TLStorage> implements AbsApiSt
         key.setAuthorised(true);
         getObj().setUid(uid);
         getObj().setPhone(phone);
-        write();
     }
 
     @Override
@@ -95,7 +93,6 @@ public class MemoryApiState extends TLPersistence<TLStorage> implements AbsApiSt
     @Override
     public synchronized void setPrimaryDc(int dc) {
         getObj().setPrimaryDc(dc);
-        write();
     }
 
     @Override
@@ -108,7 +105,6 @@ public class MemoryApiState extends TLPersistence<TLStorage> implements AbsApiSt
     public synchronized void setAuthenticated(int dcId, boolean auth) {
         TLKey key = findKey(dcId);
         key.setAuthorised(auth);
-        write();
     }
 
     @Override
@@ -154,7 +150,6 @@ public class MemoryApiState extends TLPersistence<TLStorage> implements AbsApiSt
             }
             getObj().getDcInfos().add(new TLDcInfo(option.getFlags(), option.getId(), option.getIpAddress(), option.getPort(), nextVersion));
         }
-        write();
     }
 
     public synchronized void updateDCInfo(int flags, int dcId, String ip, int port) {
@@ -171,7 +166,6 @@ public class MemoryApiState extends TLPersistence<TLStorage> implements AbsApiSt
         }
 
         getObj().getDcInfos().add(new TLDcInfo(flags, dcId, ip, port, version));
-        write();
     }
 
     @Override
@@ -187,7 +181,6 @@ public class MemoryApiState extends TLPersistence<TLStorage> implements AbsApiSt
             return;
         }
         getObj().getKeys().add(new TLKey(dcId, authKey));
-        write();
     }
 
     @Override
@@ -292,7 +285,6 @@ public class MemoryApiState extends TLPersistence<TLStorage> implements AbsApiSt
         for (KnownSalt salt : salts) {
             key.getSalts().add(new TLLastKnownSalt(salt.getValidSince(), salt.getValidUntil(), salt.getSalt()));
         }
-        write();
     }
 
     private synchronized KnownSalt[] readKnownSalts(int dcId) {
@@ -344,7 +336,6 @@ public class MemoryApiState extends TLPersistence<TLStorage> implements AbsApiSt
         }
         getObj().setAuthorized(false);
         getObj().setUid(0);
-        write();
     }
 
     @Override
@@ -352,7 +343,6 @@ public class MemoryApiState extends TLPersistence<TLStorage> implements AbsApiSt
         getObj().getKeys().clear();
         getObj().setAuthorized(false);
         getObj().setUid(0);
-        write();
     }
 
     private class DcAddress {

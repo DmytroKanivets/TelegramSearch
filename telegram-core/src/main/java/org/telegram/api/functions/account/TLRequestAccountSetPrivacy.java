@@ -3,11 +3,7 @@ package org.telegram.api.functions.account;
 import org.telegram.api.account.TLAccountPrivacyRules;
 import org.telegram.api.input.privacy.inputprivacykey.TLAbsInputPrivacyKey;
 import org.telegram.api.input.privacy.inputprivacyrule.TLAbsInputPrivacyRule;
-import org.telegram.tl.StreamingUtils;
-import org.telegram.tl.TLContext;
-import org.telegram.tl.TLMethod;
-import org.telegram.tl.TLObject;
-import org.telegram.tl.TLVector;
+import org.telegram.tl.*;
 
 import java.io.IOException;
 import java.io.InputStream;

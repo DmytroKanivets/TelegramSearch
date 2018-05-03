@@ -1,6 +1,5 @@
 package org.telegram.api.message.media;
 
-import org.telegram.api.input.media.TLAbsInputMedia;
 import org.telegram.api.paymentapi.TLWebDocument;
 import org.telegram.tl.StreamingUtils;
 import org.telegram.tl.TLContext;

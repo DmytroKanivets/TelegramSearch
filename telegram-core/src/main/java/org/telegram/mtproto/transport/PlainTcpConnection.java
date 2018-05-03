@@ -8,9 +8,7 @@ import java.io.InputStream;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 
-import static org.telegram.tl.StreamingUtils.readBytes;
-import static org.telegram.tl.StreamingUtils.writeByte;
-import static org.telegram.tl.StreamingUtils.writeByteArray;
+import static org.telegram.tl.StreamingUtils.*;
 
 /**
  * Created with IntelliJ IDEA.

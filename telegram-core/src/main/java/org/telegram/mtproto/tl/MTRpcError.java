@@ -9,10 +9,7 @@ import java.io.OutputStream;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static org.telegram.tl.StreamingUtils.readInt;
-import static org.telegram.tl.StreamingUtils.readTLString;
-import static org.telegram.tl.StreamingUtils.writeInt;
-import static org.telegram.tl.StreamingUtils.writeTLString;
+import static org.telegram.tl.StreamingUtils.*;
 
 /**
  * Created with IntelliJ IDEA.

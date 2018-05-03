@@ -4,5 +4,6 @@ public enum SearchType {
     EQUALS,
     LOWER,
     HIGHER,
-    LIKE
+    LIKE,
+    CONTAINS, SUBSTRING
 }

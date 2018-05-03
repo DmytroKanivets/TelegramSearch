@@ -5,7 +5,6 @@ import org.telegram.api.page.block.TLAbsPageBlock;
 import org.telegram.api.photo.TLAbsPhoto;
 import org.telegram.tl.StreamingUtils;
 import org.telegram.tl.TLContext;
-import org.telegram.tl.TLObject;
 import org.telegram.tl.TLVector;
 
 import java.io.IOException;

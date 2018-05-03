@@ -44,9 +44,6 @@ import org.telegram.tl.TLMethod;
 import org.telegram.tl.TLObject;
 import org.telegram.tl.TLVector;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.security.SecureRandom;
 import java.util.concurrent.*;
@@ -82,18 +79,10 @@ public class KernelComm implements IKernelComm {
         NotificationsService.getInstance().addObserver(this, NotificationsService.updatesInvalidated);
         this.apiKey = apiKey;
         this.apiState = apiState;
-        try {
-            final File URANDOM_FILE = new File("/dev/urandom");
-            final FileInputStream sUrandomIn = new FileInputStream(URANDOM_FILE);
-            final byte[] buffer = new byte[BYTES];
-            sUrandomIn.read(buffer);
-            sUrandomIn.close();
-            this.random.setSeed(buffer);
-        } catch (FileNotFoundException e) {
-            BotLogger.info(LOGTAG, e);
-        } catch (Exception e) {
-            BotLogger.error(LOGTAG, e);
-        }
+        SecureRandom random = new SecureRandom();
+        final byte[] buffer = new byte[BYTES];
+        random.nextBytes(buffer);
+        this.random.setSeed(buffer);
     }
 
     public void setMainHandler(@NotNull MainHandler mainHandler) {
@@ -115,7 +104,7 @@ public class KernelComm implements IKernelComm {
             @Override
             public void onAuthCancelled(TelegramApi api) {
                 apiState.resetAuth();
-                BotLogger.severe(LOGTAG, "Auth cancelled");
+                BotLogger.error(LOGTAG, "Auth cancelled");
             }
 
             @Override
@@ -137,7 +126,7 @@ public class KernelComm implements IKernelComm {
         if (mainHandler != null) {
             mainHandler.onUpdate(updates);
         } else {
-            BotLogger.severe(LOGTAG, "Main Handler not found from kernelcomm");
+            BotLogger.error(LOGTAG, "Main Handler not found from kernelcomm");
         }
     }
 
@@ -213,7 +202,7 @@ public class KernelComm implements IKernelComm {
         } catch (InterruptedException e) {
             BotLogger.error(LOGTAG, e);
         } catch (Exception e) {
-            BotLogger.severe(LOGTAG, "Bot threw an unexpected exception at KernelComm-doRpcCallSyncNoAuth");
+            BotLogger.error(LOGTAG, "Bot threw an unexpected exception at KernelComm-doRpcCallSyncNoAuth");
         }
 
         handleAffectedMessagesAndHistory(answer);
@@ -259,9 +248,9 @@ public class KernelComm implements IKernelComm {
                 final TLObject answer = this.api.doRpcCall(method);
                 handleAffectedMessagesAndHistory(answer);
             } catch (RpcException e) {
-                BotLogger.severe(LOGTAG, "Rpc call failed", e);
+                BotLogger.error(LOGTAG, "Rpc call failed", e);
             } catch (TimeoutException e) {
-                BotLogger.severe(LOGTAG, "timeout");
+                BotLogger.error(LOGTAG, "timeout");
             } catch (IOException e) {
                 BotLogger.error(LOGTAG, e);
             } catch (Exception e) {
@@ -744,7 +733,7 @@ public class KernelComm implements IKernelComm {
             }
 
         } catch (ExecutionException e) {
-            BotLogger.severe(LOGTAG, e);
+            BotLogger.error(LOGTAG, e);
         }
     }
 

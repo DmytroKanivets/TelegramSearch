@@ -2,6 +2,27 @@
      cursor:pointer
  }
 
-.btn-light {
+.btn {
     border: 1px solid rgb(206, 212, 218) !important;
+}
+
+.editable-click {
+    border: none !important;
+}
+
+/*.editable-unsaved {*/
+    /*font-weight: normal;*/
+/*}*/
+
+.datepicker .active {
+    background: #868e96 none !important;
+}
+
+
+.datepicker .active :hover {
+    color: #212529 !important;
+}
+
+.editable-clear a {
+    color: #212529 !important;
 }

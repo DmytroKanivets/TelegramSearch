@@ -3,7 +3,10 @@ package org.telegram.api.functions.phone;
 import org.telegram.api.input.phonecall.TLInputPhoneCall;
 import org.telegram.api.phone.call.discardreason.TLAbsPhoneCallDiscardReason;
 import org.telegram.api.updates.TLAbsUpdates;
-import org.telegram.tl.*;
+import org.telegram.tl.StreamingUtils;
+import org.telegram.tl.TLContext;
+import org.telegram.tl.TLMethod;
+import org.telegram.tl.TLObject;
 
 import java.io.IOException;
 import java.io.InputStream;

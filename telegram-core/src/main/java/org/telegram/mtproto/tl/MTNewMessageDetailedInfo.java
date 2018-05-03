@@ -7,10 +7,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-import static org.telegram.tl.StreamingUtils.readInt;
-import static org.telegram.tl.StreamingUtils.readLong;
-import static org.telegram.tl.StreamingUtils.writeInt;
-import static org.telegram.tl.StreamingUtils.writeLong;
+import static org.telegram.tl.StreamingUtils.*;
 
 /**
  * Created with IntelliJ IDEA.
