@@ -46,7 +46,6 @@ public class ChannelsServiceImpl implements ChannelsService {
         List<Message> mes;
         do {
             mes = messageRepository.findByCriteria(criteria, 0, 100);
-            System.out.println("Deleting " + mes.size());
             for (Message m : mes) {
                 messageRepository.delete(m.getId());
             }

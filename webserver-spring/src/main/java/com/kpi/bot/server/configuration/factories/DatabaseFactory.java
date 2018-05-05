@@ -9,6 +9,7 @@ import com.kpi.bot.entity.data.Message;
 import com.kpi.bot.entity.data.User;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Scope;
 
 import java.util.Arrays;
@@ -24,6 +25,7 @@ public class DatabaseFactory {
 
 
     @Bean
+    @Primary
     @Scope("singleton")
     public Repository<Message> createMessageRepository() {
         return new Database<>();

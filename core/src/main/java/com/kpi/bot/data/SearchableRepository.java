@@ -7,5 +7,4 @@ import java.util.List;
 
 public interface SearchableRepository<T extends Identifiable> extends Repository<T> {
     List<T> findByCriteria(SearchCriteria criteria, Integer offset, Integer limit);
-    List<T> findByQuery(String query, Integer offset, Integer limit);
 }

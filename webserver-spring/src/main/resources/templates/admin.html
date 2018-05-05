@@ -7,59 +7,178 @@
 
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css"/>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css"/>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.0/bootstrap3-editable/css/bootstrap-editable.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.1/bootstrap3-editable/css/bootstrap-editable.css"/>
 
     <script src="/resources/js/main.js"></script>
     <link rel="stylesheet" href="/resources/css/main.css"/>
 </head>
 <body>
-<div class="container justify-content-center" id="main">
+<div class="container justify-content-center d-none" id="main">
     <div class="col-md-8 offset-md-2">
         <div class="row mb-4">
-            <div class="col-md-12">
-                <h1 class="text-center">Admin page</h1>
+            <div class="col-md-12" id="alert-container">
 
             </div>
         </div>
 
         <div class="row mb-4">
+            <div class="col-md-12">
+                <h1 class="text-center">Admin page</h1>
+            </div>
+        </div>
+
+        <div class="row mb-4">
             <div class="col-md-6">
-                <ul class="list-group">
-                    <li class="list-group-item" v-for="channel in channelStats">
-                        {{channel.name}}
-                        <span class="fa fa-times delete-channel" v-on:click="deleteChannel"></span>
-                    </li>
-                </ul>
+                <div class="row  mb-4">
+                    <div class="col-md-8">
+                        <h4>Channels</h4>
+                    </div>
+                    <div class="col-md-4">
+                        <button type="button" class="btn btn-light" style="width:100%;" data-toggle="modal" data-target="#add-channel"><span class="fa fa-plus"></span>Add</button>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <ul class="list-group">
+                            <li class="list-group-item" v-for="channel in channelStats">
+                                {{channel.name}}
+                                <span class="fa fa-times delete-channel" v-on:click="deleteChannel"></span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
             </div>
             <div class="col-md-6">
+                <div class="row  mb-4">
+                    <div class="col-md-12">
+                        <h4>Stats</h4>
+                    </div>
 
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="card mb-4" v-show="memoryStats.loaded">
+                            <div class="card-body">
+                                <h5  class="card-title">Memory used</h5>
+                                <table class="table table-sm borderless">
+                                    <tr>
+                                        <td>Total memory</td>
+                                        <td>{{formatMemory(memoryStats.totalMemory)}}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Index memory</td>
+                                        <td>{{formatMemory(memoryStats.indexMemory)}}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Messages memory</td>
+                                        <td>{{formatMemory(memoryStats.messageMemory)}}</td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="card mb-4" v-show="indexingStats.loaded">
+                            <div class="card-body">
+                                <h5  class="card-title">Indexing stats</h5>
+                                <table class="table table-sm borderless">
+                                    <tr>
+                                        <td>Total messages</td>
+                                        <td>{{indexingStats.totalMessages}}</td>
+                                    </tr>
+                                    <tr v-show="indexingStats.messagesInfo && indexingStats.messagesInfo.messages > 0">
+                                        <td>Average index time</td>
+                                        <td>{{(indexingStats.messagesInfo.time / indexingStats.messagesInfo.messages).toFixed(2)}} ms</td>
+                                    </tr>
+                                    <tr v-show="indexingStats.searchInfo && indexingStats.searchInfo.messages > 0">
+                                        <td>Average search time</td>
+                                        <td>{{(indexingStats.searchInfo.time / indexingStats.searchInfo.messages).toFixed(2)}} ms</td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+
+    <div class="modal fade" id="add-channel" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">New channel</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form>
+                        <div class="form-group">
+                            <label for="channel-link" class="col-form-label">Channel link:</label>
+                            <input type="text" class="form-control" id="channel-link" v-model="addChannel.link"/>
+                        </div>
+                        <div class="form-group">
+
+                            <label for="add-date" class="col-form-label">Index history:</label>
+                            <div class="input-group">
+                                <span class="input-group-addon">
+                                    <input type="checkbox" id="add-date" v-model="addChannel.indexHistory">
+                                </span>
+                                <input type="text" class="form-control" id="selected-date" :disabled="!addChannel.indexHistory" v-bind:value="formatDate(addChannel.selectedDate)" readonly>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="addChannel()">Add</button>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.1/moment.js"></script>
 <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.3/umd/popper.min.js"></script>
-<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/js/bootstrap.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.0/bootstrap3-editable/js/bootstrap-editable.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/js/bootstrap.js"></script>
+<script src="/resources/js/bootstrap-editable.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/vue@2.5.16/dist/vue.js"></script>
 
 <script>
     var state = {};
     var data = {
-        channelStats: [
-            {
-                name: "x"
-            },
-            {
-
-                name: "y"
-            }
-        ],
+        channelStats: [],
         totalStats: {
             loaded: false,
             messages: 0,
             time: 0
+        },
+        addChannel: {
+            link: undefined,
+            indexHistory: false,
+            selectedDate: undefined
+        },
+        indexingStats: {
+            loaded: false,
+            messagesInfo: {
+                time: undefined,
+                messages: undefined
+            },
+            searchInfo: {
+                time: undefined,
+                messages: undefined
+            },
+            totalMessages: undefined
+        },
+        memoryStats: {
+            loaded: false,
+            indexMemory: undefined,
+            totalMemory: undefined,
+            messageMemory: undefined
         }
     };
     var vm = new Vue({
@@ -67,36 +186,97 @@
         data: data,
         methods: {
             deleteChannel: function (event) {
-//                console.log(event.target.parentNode.textContent.trim());
                 var result = confirm("You really want to delete this channel?");
                 if (result) {
                     deleteChannel(event.target.parentNode.textContent.trim());
-
                     loadChannels();
-                    //delete channel
-                    //reload channels
                 }
+            },
+            formatDate: formatDate,
+            formatMemory: function(value) {
+                if (!value) return '';
+                var suffixes = ["b", "KB", "MB", "GB"];
+                var index = 0;
+
+                while (value > 1000) {
+                    index++;
+                    value = value / 1000;
+                }
+
+                return value.toFixed(2) + " " + suffixes[index];
             }
         }
     });
 
+
     $(function(){
-        loadChannels();
+        reloadInfo();
+
+        $('#add-channel').on('hide.bs.modal', function (e) {
+            data.addChannel.link = undefined;
+            data.addChannel.indexHistory = false;
+            data.addChannel.selectedDate = undefined;
+        });
+
+
+        $('#selected-date').editable({
+            title: 'Enter start date',
+            type: 'date',
+            clear: false,
+            highlight: false,
+            display: false,
+            value: '',
+            unsavedclass: null,
+            send: 'never',
+            success: function(response, newValue) {
+                data.addChannel.selectedDate = newValue;
+            }
+        });
+        $("#selected-date").removeClass("editable editable-click");
+
+        $("#main").removeClass("d-none");
+
     });
 </script>
 
 
 <script>
 
+    function reloadInfo() {
+        loadChannels();
+        loadIndexingStats();
+        loadMemoryStats();
+    }
+
+    function addChannel() {
+        var channelLink = $('#channel-link').val();
+
+        var channelInfo = {
+            channel: data.addChannel.link
+        };
+        if (data.addChannel.indexHistory) {
+            channelInfo.startIndexDate = data.addChannel.selectedDate || new Date();
+        }
+
+        var params = {
+            url: '/api/admin/channels',
+            method: 'PUT',
+            data: JSON.stringify(channelInfo),
+            ok: function (response) {
+                loadChannels();
+                $('#add-channel').modal('hide');
+            }
+        };
+        sendJsonPayload(params);
+
+    }
+
     function deleteChannel(channelName) {
         var params = {
             url: '/api/admin/channels/name/' + channelName,
             method: 'DELETE',
-            success: function (response) {
-                console.log(response.status);
-                if (response.status == 'ok') {
-                    loadChannels();
-                }
+            ok: function (response) {
+                loadChannels();
             }
         };
         sendJsonPayload(params);
@@ -106,42 +286,38 @@
         var params = {
             url: '/api/admin/stats/messages',
             method: 'GET',
-            success: function(response) {
-                if (response.status == 'ok') {
-                    data.channelStats = response.stats.statistics;
-                    data.totalStats = response.stats.total;
-                    data.totalStats.loaded = true;
-                }
+            ok: function(response) {
+                data.channelStats = response.stats.statistics;
+                data.totalStats = response.stats.total;
+                data.totalStats.loaded = true;
+
             }
         };
         sendJsonPayload(params);
     }
-
-    function searchForMessages() {
-        var searchParams = {
-            body: $('#body-text').val(),
-            author: getInputString('author'),
-            channel: getInputString('channel')
-        };
-
+    function loadIndexingStats() {
         var params = {
-            url: '/api/message/',
-            data: JSON.stringify(searchParams),
-            success: function(response) {
-                if (response.status == 'ok') {
-                    response.messages.forEach(function (message) {
-                        message.header = message.author;
-                        if (message.channel && message.channel != message.author) {
-                            message.header += ' @ ' + message.channel;
-                        }
-                    });
-                    data.messages = response.messages;
-                }
+            url: '/api/admin/stats/indexing',
+            method: 'GET',
+            ok: function(response) {
+                data.indexingStats = response;
+                data.indexingStats.loaded = true;
             }
         };
-
         sendJsonPayload(params);
     }
+    function loadMemoryStats() {
+        var params = {
+            url: '/api/admin/stats/memory',
+            method: 'GET',
+            ok: function(response) {
+                data.memoryStats = response;
+                data.memoryStats.loaded = true;
+            }
+        };
+        sendJsonPayload(params);
+    }
+
 </script>
 
 </body>

@@ -9,36 +9,24 @@ import java.util.List;
 
 @Data
 public class IndexingStatistics {
-
-    @Data
-    @AllArgsConstructor
-    public static class ChannelStatistics {
-        private String name;
-        private long time;
-        private long messages;
-    }
-
-    private ChannelStatistics total;
-    private List<ChannelStatistics> statistics;
+    private Statistics.StatisticsEntry total;
+    private List<Statistics.StatisticsEntry> statistics;
 
     public IndexingStatistics() {
-        this.total = new ChannelStatistics("total", Statistics.getTime(CHANNELS_PREFIX + CHANNELS_ALL), Statistics.getCount(CHANNELS_PREFIX + CHANNELS_ALL));
+        this.total = new Statistics.StatisticsEntry("total", Statistics.getTime(Statistics.CHANNELS_PREFIX + Statistics.CHANNELS_ALL), Statistics.getCount(Statistics.CHANNELS_PREFIX + Statistics.CHANNELS_ALL));
         this.statistics = new LinkedList<>();
 
         for (String entry : Statistics.getKeys()) {
-            if (entry.startsWith(CHANNELS_PREFIX) && !entry.equals(CHANNELS_PREFIX + CHANNELS_ALL)) {
-                String name = entry.substring(CHANNELS_PREFIX.length());
-                statistics.add(new ChannelStatistics(name, Statistics.getTime(entry), Statistics.getCount(entry)));
+            if (entry.startsWith(Statistics.CHANNELS_PREFIX) && !entry.equals(Statistics.CHANNELS_PREFIX + Statistics.CHANNELS_ALL)) {
+                String name = entry.substring(Statistics.CHANNELS_PREFIX.length());
+                statistics.add(new Statistics.StatisticsEntry(name, Statistics.getTime(entry), Statistics.getCount(entry)));
             }
         }
     }
 
-    private static final String CHANNELS_ALL = "all";
-    private static final String CHANNELS_PREFIX = "channel_";
-
     public static void messageIndexed(String channel, long time) {
-        Statistics.addTime(CHANNELS_PREFIX + channel, time);
-        Statistics.addTime(CHANNELS_PREFIX + CHANNELS_ALL, time);
+        Statistics.addTime(Statistics.CHANNELS_PREFIX + channel, time);
+        Statistics.addTime(Statistics.CHANNELS_PREFIX + Statistics.CHANNELS_ALL, time);
     }
 
     public static IndexingStatistics getIndexingStatistics() {
@@ -46,7 +34,7 @@ public class IndexingStatistics {
     }
 
     public static void removeChannel(String channel) {
-        Statistics.remove(CHANNELS_PREFIX + channel);
+        Statistics.remove(Statistics.CHANNELS_PREFIX + channel);
     }
 
 }

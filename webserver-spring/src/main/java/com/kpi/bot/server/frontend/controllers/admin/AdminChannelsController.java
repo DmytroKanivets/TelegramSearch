@@ -13,6 +13,7 @@ import com.kpi.bot.services.ChannelsService;
 import com.kpi.bot.services.MessageService;
 import com.kpi.bot.services.loader.telegram.ChannelJoinException;
 import com.kpi.bot.services.loader.telegram.TelegramClient;
+import com.kpi.bot.services.loader.telegram.exceptions.ChannelAlreadyJoinedException;
 import com.kpi.bot.services.loader.telegram.structure.JoinInfo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -37,7 +38,7 @@ public class AdminChannelsController {
         try {
             channelsService.deleteChannelByName(name);
         } catch (ChannelNotFoundException e) {
-            return ResponseBuilder.ERROR().add("message", e.getMessage()).build();
+            return ResponseBuilder.ERROR(e.getMessage()).build();
         }
         return ResponseBuilder.OK().build();
     }
@@ -48,7 +49,7 @@ public class AdminChannelsController {
         try {
             channelsService.deleteChannelById(id);
         } catch (Exception e) {
-            return ResponseBuilder.ERROR().add("message", e.getMessage()).build();
+            return ResponseBuilder.ERROR(e.getMessage()).build();
         }
         return ResponseBuilder.OK().build();
     }
@@ -59,8 +60,8 @@ public class AdminChannelsController {
             JoinInfo info = telegramClient.getApiHandler().joinChannel(request.getChannel());
             telegramClient.startIndexing(info);
             return ResponseBuilder.OK().add("channel", info.getChannel().getName()).build();
-        } catch (ChannelJoinException e) {
-            return ResponseBuilder.ERROR().add("message", e.getMessage()).build();
+        } catch (ChannelNotFoundException | ChannelAlreadyJoinedException e) {
+            return ResponseBuilder.ERROR(e.getMessage()).build();
         }
     }
 }

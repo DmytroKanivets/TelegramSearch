@@ -22,7 +22,7 @@ public class IndexingStarter {
     @Autowired
     private ChannelsService service;
 
-    @PostConstruct
+//    @PostConstruct
     private void fillTestData() {
         for (int i = 1; i < 10; i++) {
             Channel c = new Channel();
@@ -44,8 +44,7 @@ public class IndexingStarter {
 
     @Autowired
     public IndexingStarter(TelegramClient telegramClient) {
-//        BotLogger.setLevel(Level.OFF);
-//        new Thread(telegramClient::startListening).start();
+        new Thread(telegramClient::startListening).start();
     }
 
 

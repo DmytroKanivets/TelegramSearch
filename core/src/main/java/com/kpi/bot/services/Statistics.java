@@ -1,11 +1,28 @@
 package com.kpi.bot.services;
 
+import lombok.AllArgsConstructor;
+import lombok.Data;
+
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class Statistics {
+
+    @Data
+    @AllArgsConstructor
+    public static class StatisticsEntry {
+        private String name;
+        private long time;
+        private long messages;
+    }
+
+
+    public static final String CHANNELS_ALL = "all";
+    public static final String CHANNELS_PREFIX = "channel_";
+    public static final String SEARCH = "search";
+
     private static final Map<String, Long> time = new ConcurrentHashMap<>();
     private static final Map<String, Long> count = new ConcurrentHashMap<>();
 
@@ -39,5 +56,9 @@ public class Statistics {
     public static void remove(String s) {
         time.remove(s);
         count.remove(s);
+    }
+
+    public static Statistics.StatisticsEntry getEntry(String name) {
+        return new StatisticsEntry(name, getTime(name), getCount(name));
     }
 }

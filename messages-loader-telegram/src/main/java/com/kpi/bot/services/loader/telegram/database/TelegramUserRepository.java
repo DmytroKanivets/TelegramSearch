@@ -64,4 +64,9 @@ public class TelegramUserRepository implements TelegramRepository<User> {
         userRepository.deleteAll();
     }
 
+    @Override
+    public int getSize() {
+        return userRepository.getSize();
+    }
+
 }

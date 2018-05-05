@@ -11,7 +11,6 @@ public interface MessageService {
     void indexAll(Iterable<Message> messages);
 
     List<Message> search(SearchCriteria criteria, Integer offset, Integer limit);
-    List<Message> search(String query, Integer offset, Integer limit);
     List<Message> getAll();
     Message getById(String id);
 

@@ -42,4 +42,9 @@ public class Database<T extends Identifiable> implements Repository<T> {
     public void deleteAll() {
 
     }
+
+    @Override
+    public int getSize() {
+        return storage.size();
+    }
 }

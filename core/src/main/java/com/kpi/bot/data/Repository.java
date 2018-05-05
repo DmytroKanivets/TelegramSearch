@@ -12,4 +12,5 @@ public interface Repository <T extends Identifiable> {
     List<T> findAll();
     void delete(String key);
     void deleteAll();
+    int getSize();
 }

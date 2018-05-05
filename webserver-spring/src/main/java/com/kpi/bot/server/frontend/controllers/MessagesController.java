@@ -1,5 +1,6 @@
 package com.kpi.bot.server.frontend.controllers;
 
+import com.kpi.bot.database.lucene.FormatConverter;
 import com.kpi.bot.entity.data.Message;
 import com.kpi.bot.entity.search.SearchCriteria;
 import com.kpi.bot.entity.search.SearchPredicate;
@@ -30,8 +31,7 @@ public class MessagesController {
         return service.getById(id);
     }
 
-    @PostMapping("/params")
-    public Object findByParams(@RequestBody ParamsRequest params) {
+    private SearchCriteria buildCriteria(ParamsRequest params) {
         SearchCriteria criteria = new SearchCriteria();
         if (StringUtils.notEmpty(params.getBody())) {
             criteria.addPredicate(SearchPredicate.LIKE("body", params.getBody()));
@@ -44,20 +44,19 @@ public class MessagesController {
         }
 
         if (params.getStartDate() != null) {
-            System.out.println("add start");
             criteria.addPredicate(SearchPredicate.HIGHER("timestamp", params.getStartDate().truncatedTo(ChronoUnit.DAYS)));
         }
 
         if (params.getEndDate() != null) {
-            System.out.println("add end");
             criteria.addPredicate(SearchPredicate.LOWER("timestamp", params.getEndDate().plus(Duration.ofDays(1)).truncatedTo(ChronoUnit.DAYS)));
         }
 
-        return ResponseBuilder.OK().add("messages", service.search(criteria, params.getOffset(), params.getLimit())).build();
+        return criteria;
     }
 
-    @PostMapping("/query")
-    public Object findByParams(@RequestBody QueryRequest params) {
-        return ResponseBuilder.OK().add("messages", service.search(params.getQuery(), params.getOffset(), params.getLimit())).build();
+    @PostMapping("/params")
+    public Object findByParams(@RequestBody ParamsRequest params) {
+        return ResponseBuilder.OK().add("messages", service.search(buildCriteria(params), params.getOffset(), params.getLimit())).build();
     }
+
 }
