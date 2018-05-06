@@ -1,10 +1,8 @@
 package com.kpi.bot.server.frontend.controllers;
 
-import com.kpi.bot.database.lucene.FormatConverter;
 import com.kpi.bot.entity.data.Message;
 import com.kpi.bot.entity.search.SearchCriteria;
 import com.kpi.bot.entity.search.SearchPredicate;
-import com.kpi.bot.server.frontend.data.search.QueryRequest;
 import com.kpi.bot.server.frontend.data.ResponseBuilder;
 import com.kpi.bot.server.frontend.data.search.ParamsRequest;
 import com.kpi.bot.services.MessageService;
@@ -17,12 +15,12 @@ import java.time.temporal.ChronoUnit;
 
 @RestController
 @RequestMapping("/api/message")
-public class MessagesController {
+public class UserMessagesController {
 
     private MessageService service;
 
     @Autowired
-    public MessagesController(MessageService service) {
+    public UserMessagesController(MessageService service) {
         this.service = service;
     }
 

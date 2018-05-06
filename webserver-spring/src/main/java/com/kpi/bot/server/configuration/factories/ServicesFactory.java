@@ -9,7 +9,6 @@ import com.kpi.bot.services.MessageService;
 import com.kpi.bot.services.impl.ChannelsServiceImpl;
 import com.kpi.bot.services.impl.MessageServiceImpl;
 import com.kpi.bot.services.loader.MessageLoader;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Scope;

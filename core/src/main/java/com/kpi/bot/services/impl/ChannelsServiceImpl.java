@@ -8,10 +8,8 @@ import com.kpi.bot.entity.search.SearchCriteria;
 import com.kpi.bot.entity.search.SearchPredicate;
 import com.kpi.bot.exceptions.ChannelNotFoundException;
 import com.kpi.bot.services.ChannelsService;
-import com.kpi.bot.services.Statistics;
 import com.kpi.bot.services.loader.MessageLoader;
 import com.kpi.bot.stats.IndexingStatistics;
-import com.sun.deploy.util.ArrayUtil;
 
 import java.util.List;
 

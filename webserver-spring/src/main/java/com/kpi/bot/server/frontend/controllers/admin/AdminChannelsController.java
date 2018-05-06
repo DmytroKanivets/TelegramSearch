@@ -1,24 +1,14 @@
 package com.kpi.bot.server.frontend.controllers.admin;
 
-import com.kpi.bot.data.Repository;
-import com.kpi.bot.data.SearchableRepository;
-import com.kpi.bot.entity.data.Channel;
-import com.kpi.bot.entity.data.Message;
-import com.kpi.bot.entity.search.SearchCriteria;
-import com.kpi.bot.entity.search.SearchPredicate;
 import com.kpi.bot.exceptions.ChannelNotFoundException;
 import com.kpi.bot.server.frontend.data.JoinChannelRequest;
 import com.kpi.bot.server.frontend.data.ResponseBuilder;
 import com.kpi.bot.services.ChannelsService;
-import com.kpi.bot.services.MessageService;
-import com.kpi.bot.services.loader.telegram.ChannelJoinException;
 import com.kpi.bot.services.loader.telegram.TelegramClient;
 import com.kpi.bot.services.loader.telegram.exceptions.ChannelAlreadyJoinedException;
 import com.kpi.bot.services.loader.telegram.structure.JoinInfo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/admin/channels")

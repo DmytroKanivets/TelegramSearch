@@ -1,7 +1,6 @@
 package com.kpi.bot.stats;
 
 import com.kpi.bot.services.Statistics;
-import lombok.AllArgsConstructor;
 import lombok.Data;
 
 import java.util.LinkedList;

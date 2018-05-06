@@ -1,6 +1,9 @@
 package com.kpi.bot.database.lucene;
 
-import org.apache.lucene.document.*;
+import org.apache.lucene.document.DoublePoint;
+import org.apache.lucene.document.Field;
+import org.apache.lucene.document.LongPoint;
+import org.apache.lucene.document.StringField;
 import org.apache.lucene.index.IndexableField;
 
 import java.time.Instant;

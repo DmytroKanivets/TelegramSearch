@@ -5,15 +5,11 @@ import com.kpi.bot.entity.data.Channel;
 import com.kpi.bot.exceptions.ChannelNotFoundException;
 import com.kpi.bot.server.frontend.data.JoinChannelRequest;
 import com.kpi.bot.server.frontend.data.ResponseBuilder;
-import com.kpi.bot.services.loader.telegram.ChannelJoinException;
 import com.kpi.bot.services.loader.telegram.TelegramClient;
 import com.kpi.bot.services.loader.telegram.exceptions.ChannelAlreadyJoinedException;
 import com.kpi.bot.services.loader.telegram.structure.JoinInfo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/channels")
