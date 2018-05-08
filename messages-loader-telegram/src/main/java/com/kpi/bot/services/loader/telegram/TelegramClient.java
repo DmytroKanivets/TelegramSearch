@@ -120,7 +120,6 @@ public class TelegramClient implements MessageLoader {
             participants = kernel.getKernelComm().doRpcCallSync(request);
             if (participants != null && participants.getParticipants() != null && participants.getUsers() != null) {
                 List<User> users = participants.getUsers().stream().map(TelegramConverter::convertUser).collect(Collectors.toList());
-                users.forEach(System.out::println);
 
                 for (int i = 0; i < users.size(); i++) {
                     if (users.get(i) != null) {
@@ -136,8 +135,6 @@ public class TelegramClient implements MessageLoader {
                         userRepository.save(newUser);
                     }
                 }
-            } else {
-                System.out.println("Admins not found in channel: " + tlChannel.getTitle());
             }
 
             currentOffset++;
@@ -148,8 +145,7 @@ public class TelegramClient implements MessageLoader {
         try {
             if (tlChat instanceof TLChannel) {
                 TLChannel tlChannel = (TLChannel) tlChat;
-                System.out.println("--------- SAVING " + tlChannel.getTitle() + "#" + tlChannel.getId() + "#" + tlChannel.toString() + " ---------");
-//                System.out.println("--------- STATUS " + (tlChannel.getFlags() & 256) + " ---------");//if > 0 than can get admins
+                log.info("Saving " + tlChannel.getTitle() + "#" + tlChannel.getId());
 
                 channelRepository.save(TelegramConverter.convertChannel(tlChannel));
                 User user = new User();
@@ -163,9 +159,9 @@ public class TelegramClient implements MessageLoader {
                 }
             } else {
                 if (tlChat instanceof TLChat) {
-                    System.out.println("Ignore chat " + ((TLChat) tlChat).getTitle() + "#" + tlChat.getId());
+                    log.debug("Ignore chat " + ((TLChat) tlChat).getTitle() + "#" + tlChat.getId());
                 } else {
-                    System.out.println("Ignore non-channel #" + tlChat.getId());
+                    log.debug("Ignore non-channel #" + tlChat.getId());
                 }
             }
         } catch (ExecutionException e) {
@@ -189,12 +185,12 @@ public class TelegramClient implements MessageLoader {
 
     private void indexHistory(Channel channel, Instant startDate) {
         try {
-            final int batchSize = 10000;
+            final int batchSize = 100; //Max batch size available from Telegram
 
             Instant now = Instant.now();
             int offset = 0;
 
-            System.out.println("History for channel " + channel);
+            log.info("Loading history for channel " + channel);
             TLInputPeerChannel tlPeerChannel = new TLInputPeerChannel();
             tlPeerChannel.setChannelId(Integer.valueOf(channel.getId()));
             tlPeerChannel.setAccessHash(Long.valueOf(channel.getHash()));
@@ -222,13 +218,14 @@ public class TelegramClient implements MessageLoader {
                     }
                 }
 
-                offset += batchSize;
+                if (historyResponse == null) { //FLOOD WAIT 20
+                    Thread.sleep(30 * 1000);
+                } else {
+                    offset += batchSize;
+                }
             } while (lastMessage != null && lastMessage.getDate() < now.getEpochSecond());
-            if (lastMessage != null) {
-                System.out.println("LAST DATE " + lastMessage.getDate());
-            }
 
-        } catch (ExecutionException | RpcException e) {
+        } catch (ExecutionException | RpcException | InterruptedException e) {
             throw new RuntimeException(e);
         }
     }
@@ -257,7 +254,6 @@ public class TelegramClient implements MessageLoader {
     private void indexMessage(TLMessage tlMessage) {
         String messageContent = extractMessageContent(tlMessage);
         if (StringUtils.notEmpty(messageContent)) {
-            System.out.println("Indexing message:\n" + messageContent);
             Message message = new Message();
             message.setId(String.valueOf(tlMessage.getId()));
             Channel channel = channelRepository.find(String.valueOf(tlMessage.getChatId()));
@@ -268,7 +264,7 @@ public class TelegramClient implements MessageLoader {
                 if (String.valueOf(tlMessage.getChatId()).equals(SELF)) {
                     message.setChannel("SELF");
                 } else {
-                    System.out.println("Can not find channel #" + tlMessage.getChatId());
+                    log.warn("Can not find channel #" + tlMessage.getChatId());
                 }
             }
 
@@ -277,7 +273,7 @@ public class TelegramClient implements MessageLoader {
             if (user != null) {
                 message.setAuthor(user.getUserName());
             } else {
-                System.out.println("Can not find user #" + fromId);
+                log.warn("Can not find user #" + fromId);
             }
 
             message.setBody(messageContent);
@@ -287,7 +283,7 @@ public class TelegramClient implements MessageLoader {
     }
 
     private void checkJoinMessage(TLMessage tlMessage) {
-        System.out.println("Waiting to index message:\n" + tlMessage.getMessage());
+        log.info("Incoming message:\n" + tlMessage.getMessage());
         Channel channel = channelRepository.find(String.valueOf(tlMessage.getChatId()));
         User user = userRepository.find(String.valueOf(tlMessage.getFromId()));
         if (channel != null && user != null) {
@@ -359,13 +355,12 @@ public class TelegramClient implements MessageLoader {
     private class UpdatesHandler implements TelegramUpdatesHandler {
         @Override
         public void onMessage(TLMessage tlMessage) {
-            System.out.println("Received update: " + tlMessage.toString());
             if (joinedChannels.contains(String.valueOf(tlMessage.getChatId())) && tlMessage.getFwdFrom() == null) {
                 indexMessage(tlMessage);
             } else if (pendingChannels.getByJoinHash(tlMessage.getMessage()) != null) {
                 checkJoinMessage(tlMessage);
             } else {
-                System.out.println("Ignoring message (chat#" + tlMessage.getChatId() + "):\n" + tlMessage.getMessage());
+                log.warn("Ignoring message (chat#" + tlMessage.getChatId() + "):\n" + tlMessage.getMessage());
             }
         }
 

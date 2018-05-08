@@ -1,5 +1,7 @@
 package com.kpi.bot.database.lucene;
 
+import lombok.extern.java.Log;
+
 import java.time.Instant;
 import java.util.Date;
 
@@ -14,7 +16,6 @@ public interface FormatConverter {
         } else if (Integer.class.isAssignableFrom(o.getClass())) {
             return ((Integer) o).longValue();
         } else {
-            System.out.println(o.getClass());
             return Long.parseLong(o.toString());
         }
     }

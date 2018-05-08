@@ -24,7 +24,7 @@ public class Main {
         CharTermAttribute charTermAttribute = stream.addAttribute(CharTermAttribute.class);
         stream.reset();
         while (stream.incrementToken()) {
-            System.out.println(charTermAttribute);
+//            System.out.println(charTermAttribute);
         }
         stream.end();
         stream.close();
@@ -53,6 +53,6 @@ public class Main {
         criteria.addPredicate(SearchPredicate.LOWER("timestamp", end));
         criteria.addPredicate(SearchPredicate.HIGHER("timestamp", start));
 
-        System.out.println(database.findByCriteria(criteria, 0, 100).stream().map(Message::getId).collect(Collectors.joining(",")));
+//        System.out.println(database.findByCriteria(criteria, 0, 100).stream().map(Message::getId).collect(Collectors.joining(",")));
     }
 }

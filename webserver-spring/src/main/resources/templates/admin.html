@@ -116,23 +116,23 @@
                     <form>
                         <div class="form-group">
                             <label for="channel-link" class="col-form-label">Channel link:</label>
-                            <input type="text" class="form-control" id="channel-link" v-model="addChannel.link"/>
+                            <input type="text" class="form-control" id="channel-link" v-model="addChannel.link" :disabled="addChannel.loading"/>
                         </div>
                         <div class="form-group">
 
                             <label for="add-date" class="col-form-label">Index history:</label>
                             <div class="input-group">
                                 <span class="input-group-addon">
-                                    <input type="checkbox" id="add-date" v-model="addChannel.indexHistory">
+                                    <input type="checkbox" id="add-date" v-model="addChannel.indexHistory" :disabled="addChannel.loading">
                                 </span>
-                                <input type="text" class="form-control" id="selected-date" :disabled="!addChannel.indexHistory" v-bind:value="formatDate(addChannel.selectedDate)" readonly>
+                                <input type="text" class="form-control" id="selected-date" :disabled="addChannel.loading || !addChannel.indexHistory" v-bind:value="formatDate(addChannel.selectedDate)" readonly>
                             </div>
                         </div>
                     </form>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-light" data-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-primary" onclick="addChannel()">Add</button>
+                    <button type="button" class="btn btn-primary"  :disabled="addChannel.loading" onclick="addChannel()">Add</button>
                 </div>
             </div>
         </div>
@@ -160,6 +160,7 @@
         addChannel: {
             link: undefined,
             indexHistory: false,
+            loading: false,
             selectedDate: undefined
         },
         indexingStats: {
@@ -213,9 +214,11 @@
         reloadInfo();
 
         $('#add-channel').on('hide.bs.modal', function (e) {
-            data.addChannel.link = undefined;
-            data.addChannel.indexHistory = false;
-            data.addChannel.selectedDate = undefined;
+            if (!data.addChannel.loading) {
+                data.addChannel.link = undefined;
+                data.addChannel.indexHistory = false;
+                data.addChannel.selectedDate = undefined;
+            }
         });
 
 
@@ -258,12 +261,15 @@
             channelInfo.startIndexDate = data.addChannel.selectedDate || new Date();
         }
 
+        data.addChannel.loading = true;
+
         var params = {
             url: '/api/admin/channels',
             method: 'PUT',
             data: JSON.stringify(channelInfo),
             ok: function (response) {
                 loadChannels();
+                data.addChannel.loading = false;
                 $('#add-channel').modal('hide');
             }
         };
