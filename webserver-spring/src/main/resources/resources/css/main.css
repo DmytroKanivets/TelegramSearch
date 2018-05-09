@@ -23,6 +23,29 @@
     color: #212529 !important;
 }
 
-.editable-clear a {
-    color: #212529 !important;
+.editable-clear {
+    display: none;
+}
+
+.delete-channel {
+    position: absolute;
+    top: 18px;
+    right: 15px;
+}
+
+.alert {
+    margin-top: 1rem;
+}
+
+#alert-container {
+    position: absolute;
+    z-index: 999999;
+}
+
+.borderless td, .borderless th {
+    border: none;
+}
+
+.form-control[readonly]:enabled {
+    background-color: transparent;
 }

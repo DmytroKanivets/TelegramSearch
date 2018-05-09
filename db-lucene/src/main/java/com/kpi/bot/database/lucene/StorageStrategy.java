@@ -9,17 +9,16 @@ import java.nio.file.Paths;
 
 public enum StorageStrategy {
     MEMORY() {
-        private Directory directory = new RAMDirectory();
+        private RAMDirectory directory = new RAMDirectory();
 
         @Override
-        public Directory getDirectory() {
+        public RAMDirectory getDirectory() {
             return directory;
         }
     }, FILE() {
-        private static final String INDEX_NAME = "./index.dat";
 
         @Override
-        public Directory getDirectory() {
+        public FSDirectory getDirectory() {
             try {
                 return FSDirectory.open(Paths.get(INDEX_NAME));
             } catch (IOException e) {
@@ -28,5 +27,11 @@ public enum StorageStrategy {
         }
     };
 
+    public static final String INDEX_NAME = "./index.dat";
+
     public abstract Directory getDirectory();
+
+    public static StorageStrategy getStorageStrategy() {
+        return StorageStrategy.MEMORY;
+    }
 }

@@ -1,9 +1,11 @@
 package com.kpi.bot.server.frontend.controllers.admin;
 
+import com.kpi.bot.exceptions.ChannelNotFoundException;
 import com.kpi.bot.server.frontend.data.JoinChannelRequest;
 import com.kpi.bot.server.frontend.data.ResponseBuilder;
-import com.kpi.bot.services.loader.telegram.ChannelJoinException;
+import com.kpi.bot.services.ChannelsService;
 import com.kpi.bot.services.loader.telegram.TelegramClient;
+import com.kpi.bot.services.loader.telegram.exceptions.ChannelAlreadyJoinedException;
 import com.kpi.bot.services.loader.telegram.structure.JoinInfo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -13,14 +15,32 @@ import org.springframework.web.bind.annotation.*;
 public class AdminChannelsController {
     private TelegramClient telegramClient;
 
+    private ChannelsService channelsService;
+
     @Autowired
-    public AdminChannelsController(TelegramClient telegramClient) {
+    public AdminChannelsController(TelegramClient telegramClient, ChannelsService channelsService) {
+        this.channelsService = channelsService;
         this.telegramClient = telegramClient;
     }
 
-    @DeleteMapping("/{id}")
-    public Object deleteChannel(@PathVariable String id) {
-        telegramClient.stopIndexing(id);
+    @DeleteMapping("/name/{name}")
+    public Object deleteChannelByName(@PathVariable String name) {
+        try {
+            channelsService.deleteChannelByName(name);
+        } catch (ChannelNotFoundException e) {
+            return ResponseBuilder.ERROR(e.getMessage()).build();
+        }
+        return ResponseBuilder.OK().build();
+    }
+
+
+    @DeleteMapping("/id/{id}")
+    public Object deleteChannelById(@PathVariable String id) {
+        try {
+            channelsService.deleteChannelById(id);
+        } catch (Exception e) {
+            return ResponseBuilder.ERROR(e.getMessage()).build();
+        }
         return ResponseBuilder.OK().build();
     }
 
@@ -30,8 +50,8 @@ public class AdminChannelsController {
             JoinInfo info = telegramClient.getApiHandler().joinChannel(request.getChannel());
             telegramClient.startIndexing(info);
             return ResponseBuilder.OK().add("channel", info.getChannel().getName()).build();
-        } catch (ChannelJoinException e) {
-            return ResponseBuilder.ERROR().add("message", e.getMessage()).build();
+        } catch (ChannelNotFoundException | ChannelAlreadyJoinedException e) {
+            return ResponseBuilder.ERROR(e.getMessage()).build();
         }
     }
 }

@@ -25,7 +25,7 @@ import java.util.*;
 public class LuceneDatabase<T extends Identifiable> implements SearchableRepository<T> {
 
     private static final String ID_FIELD_NAME = "id";
-    private StorageStrategy storageStrategy = StorageStrategy.MEMORY;
+    private StorageStrategy storageStrategy = StorageStrategy.getStorageStrategy();
     private Analyzer analyzer = new RussianAnalyzer();
 
     private Set<String> indexedFields;
@@ -187,7 +187,12 @@ public class LuceneDatabase<T extends Identifiable> implements SearchableReposit
         }
     }
 
-    private List<T> findByQuery(Query query, Long offset, Long limit) {
+    @Override
+    public int getSize() {
+        return backingRepository.getSize();
+    }
+
+    private List<T> findByQuery(Query query, Integer offset, Integer limit) {
         TopScoreDocCollector collector = TopScoreDocCollector.create(Math.toIntExact(offset + limit));
         try {
             IndexSearcher searcher = getSearcher();
@@ -205,9 +210,10 @@ public class LuceneDatabase<T extends Identifiable> implements SearchableReposit
 
 
     @Override
-    public List<T> findByCriteria(SearchCriteria criteria, Long offset, Long limit) {
+    public List<T> findByCriteria(SearchCriteria criteria, Integer offset, Integer limit) {
         BooleanQuery.Builder query = new BooleanQuery.Builder();
         query.add(new MatchAllDocsQuery(), BooleanClause.Occur.SHOULD);
+
         for (SearchPredicate predicate : criteria.getPredicates()) {
             Query fieldQuery;
             switch (predicate.getType()) {
@@ -233,7 +239,12 @@ public class LuceneDatabase<T extends Identifiable> implements SearchableReposit
                     break;
                 case LIKE:
                     if (fullTextSearchFields.contains(predicate.getField())) {
-                        fieldQuery = new FuzzyQuery(new Term(predicate.getField(), predicate.getValue().toString()));
+//                        fieldQuery = new TermQuery(new Term(predicate.getField(), predicate.getValue().toString()));
+                        try {
+                            fieldQuery = new QueryParser(predicate.getField(), analyzer).parse(predicate.getValue().toString());
+                        } catch (ParseException e) {
+                            throw new RuntimeException(e);
+                        }
                     } else {
                         throw new RuntimeException("You should mark field " + predicate.getField() + " as text search field");
                     }
@@ -255,7 +266,7 @@ public class LuceneDatabase<T extends Identifiable> implements SearchableReposit
         return findByQuery(query.build(), offset, limit);
     }
 
-    public List<T> findByQuery(String query, Long offset, Long limit) {
+    public List<T> findByQuery(String query, Integer offset, Integer limit) {
         try {
             return findByQuery(new QueryParser("body", analyzer).parse(query), offset, limit);
         } catch (ParseException e) {

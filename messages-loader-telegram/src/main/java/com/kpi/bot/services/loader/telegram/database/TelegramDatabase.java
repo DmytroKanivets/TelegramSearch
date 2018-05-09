@@ -1,8 +1,8 @@
 package com.kpi.bot.services.loader.telegram.database;
 
 import com.kpi.bot.data.Repository;
-import com.kpi.bot.services.loader.telegram.structure.Channel;
-import com.kpi.bot.services.loader.telegram.structure.User;
+import com.kpi.bot.entity.data.Channel;
+import com.kpi.bot.entity.data.User;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

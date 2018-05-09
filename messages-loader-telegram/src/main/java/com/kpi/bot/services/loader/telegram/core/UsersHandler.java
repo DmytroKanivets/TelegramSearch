@@ -1,8 +1,8 @@
 package com.kpi.bot.services.loader.telegram.core;
 
 import com.kpi.bot.data.Repository;
+import com.kpi.bot.entity.data.User;
 import com.kpi.bot.services.loader.telegram.TelegramConverter;
-import com.kpi.bot.services.loader.telegram.structure.User;
 import lombok.extern.slf4j.Slf4j;
 import org.telegram.api.user.TLAbsUser;
 import org.telegram.bot.handlers.interfaces.IUsersHandler;

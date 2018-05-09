@@ -27,7 +27,7 @@ public class Logger {
     public static void w(String tag, String message) {
         if (logInterface != null) {
             logInterface.w(tag, message);
-        } else {
+        } else {fff
             System.out.println(tag + ":" + message);
         }
     }
@@ -41,7 +41,7 @@ public class Logger {
     public static void d(String tag, String message) {
         if (logInterface != null) {
             logInterface.d(tag, message);
-        } else {
+        } else {fff
             System.out.println(tag + ":" + message);
         }
     }

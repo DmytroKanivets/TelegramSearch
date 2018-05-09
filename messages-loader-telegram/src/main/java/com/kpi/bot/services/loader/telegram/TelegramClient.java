@@ -1,17 +1,18 @@
 package com.kpi.bot.services.loader.telegram;
 
 import com.kpi.bot.data.Repository;
-import com.kpi.bot.data.SearchableRepository;
+import com.kpi.bot.entity.data.Channel;
 import com.kpi.bot.entity.data.Message;
+import com.kpi.bot.entity.data.User;
+import com.kpi.bot.exceptions.ChannelNotFoundException;
+import com.kpi.bot.services.MessageService;
 import com.kpi.bot.services.loader.MessageLoader;
 import com.kpi.bot.services.loader.telegram.core.ChatUpdatesBuilderImpl;
 import com.kpi.bot.services.loader.telegram.core.CustomUpdatesHandler;
 import com.kpi.bot.services.loader.telegram.database.TelegramDatabase;
-import com.kpi.bot.services.loader.telegram.structure.Channel;
+import com.kpi.bot.services.loader.telegram.exceptions.ChannelAlreadyJoinedException;
 import com.kpi.bot.services.loader.telegram.structure.JoinInfo;
 import com.kpi.bot.services.loader.telegram.structure.PendingChannels;
-import com.kpi.bot.services.loader.telegram.structure.User;
-import com.kpi.bot.utils.IndexingStatistics;
 import com.kpi.bot.utils.StringUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.telegram.api.channel.TLChannelParticipant;
@@ -33,7 +34,6 @@ import org.telegram.api.functions.contacts.TLRequestContactsResolveUsername;
 import org.telegram.api.functions.messages.TLRequestMessagesGetAllChats;
 import org.telegram.api.functions.messages.TLRequestMessagesGetHistory;
 import org.telegram.api.functions.messages.TLRequestMessagesImportChatInvite;
-import org.telegram.api.functions.updates.TLRequestUpdatesGetState;
 import org.telegram.api.input.chat.TLInputChannel;
 import org.telegram.api.input.peer.TLInputPeerChannel;
 import org.telegram.api.input.user.TLInputUser;
@@ -43,9 +43,7 @@ import org.telegram.api.messages.TLAbsMessages;
 import org.telegram.api.updates.TLAbsUpdates;
 import org.telegram.api.updates.TLUpdateShortMessage;
 import org.telegram.api.updates.TLUpdates;
-import org.telegram.api.updates.TLUpdatesState;
 import org.telegram.bot.kernel.TelegramBot;
-import org.telegram.bot.kernel.differenceparameters.DifferenceParametersService;
 import org.telegram.bot.structure.LoginStatus;
 import org.telegram.tl.TLIntVector;
 
@@ -71,7 +69,8 @@ public class TelegramClient implements MessageLoader {
     private TelegramConfiguration configuration;
     private TelegramBot kernel;
 
-    private SearchableRepository<Message> messageRepository;
+    private MessageService messageService;
+
     private Repository<User> userRepository;
     private Repository<Channel> channelRepository;
 
@@ -84,9 +83,9 @@ public class TelegramClient implements MessageLoader {
         joinedChannels.remove(id);
     }
 
-    public TelegramClient(TelegramConfiguration configuration, SearchableRepository<Message> messageRepository, Repository<User> userRepository, Repository<Channel> channelRepository) {
+    public TelegramClient(TelegramConfiguration configuration, MessageService messageService, Repository<User> userRepository, Repository<Channel> channelRepository) {
         this.configuration = configuration;
-        this.messageRepository = messageRepository;
+        this.messageService = messageService;
         this.userRepository = userRepository;
         this.channelRepository = channelRepository;
 
@@ -121,7 +120,6 @@ public class TelegramClient implements MessageLoader {
             participants = kernel.getKernelComm().doRpcCallSync(request);
             if (participants != null && participants.getParticipants() != null && participants.getUsers() != null) {
                 List<User> users = participants.getUsers().stream().map(TelegramConverter::convertUser).collect(Collectors.toList());
-                users.forEach(System.out::println);
 
                 for (int i = 0; i < users.size(); i++) {
                     if (users.get(i) != null) {
@@ -137,8 +135,6 @@ public class TelegramClient implements MessageLoader {
                         userRepository.save(newUser);
                     }
                 }
-            } else {
-                System.out.println("Admins not found in channel: " + tlChannel.getTitle());
             }
 
             currentOffset++;
@@ -149,8 +145,7 @@ public class TelegramClient implements MessageLoader {
         try {
             if (tlChat instanceof TLChannel) {
                 TLChannel tlChannel = (TLChannel) tlChat;
-                System.out.println("--------- SAVING " + tlChannel.getTitle() + "#" + tlChannel.getId() + "#" + tlChannel.toString() + " ---------");
-//                System.out.println("--------- STATUS " + (tlChannel.getFlags() & 256) + " ---------");//if > 0 than can get admins
+                log.info("Saving " + tlChannel.getTitle() + "#" + tlChannel.getId());
 
                 channelRepository.save(TelegramConverter.convertChannel(tlChannel));
                 User user = new User();
@@ -164,9 +159,9 @@ public class TelegramClient implements MessageLoader {
                 }
             } else {
                 if (tlChat instanceof TLChat) {
-                    System.out.println("Ignore chat " + ((TLChat) tlChat).getTitle() + "#" + tlChat.getId());
+                    log.debug("Ignore chat " + ((TLChat) tlChat).getTitle() + "#" + tlChat.getId());
                 } else {
-                    System.out.println("Ignore non-channel #" + tlChat.getId());
+                    log.debug("Ignore non-channel #" + tlChat.getId());
                 }
             }
         } catch (ExecutionException e) {
@@ -190,12 +185,12 @@ public class TelegramClient implements MessageLoader {
 
     private void indexHistory(Channel channel, Instant startDate) {
         try {
-            final int batchSize = 10000;
+            final int batchSize = 100; //Max batch size available from Telegram
 
             Instant now = Instant.now();
             int offset = 0;
 
-            System.out.println("History for channel " + channel);
+            log.info("Loading history for channel " + channel);
             TLInputPeerChannel tlPeerChannel = new TLInputPeerChannel();
             tlPeerChannel.setChannelId(Integer.valueOf(channel.getId()));
             tlPeerChannel.setAccessHash(Long.valueOf(channel.getHash()));
@@ -223,20 +218,16 @@ public class TelegramClient implements MessageLoader {
                     }
                 }
 
-                offset += batchSize;
+                if (historyResponse == null) { //FLOOD WAIT 20
+                    Thread.sleep(30 * 1000);
+                } else {
+                    offset += batchSize;
+                }
             } while (lastMessage != null && lastMessage.getDate() < now.getEpochSecond());
-        } catch (ExecutionException | RpcException e) {
+
+        } catch (ExecutionException | RpcException | InterruptedException e) {
             throw new RuntimeException(e);
         }
-//        finally {
-//            try {
-//                TLRequestUpdatesGetState requestUpdatesGetState = new TLRequestUpdatesGetState();
-//                TLUpdatesState response = kernel.getKernelComm().doRpcCallSync(requestUpdatesGetState);
-//                new DifferenceParametersService(new TelegramDatabase(userRepository, channelRepository)).setNewUpdateParams(Integer.parseInt(channel.getId()), response.getPts(), response.getSeq(), response.getDate());
-//            } catch (ExecutionException | RpcException e) {
-//                throw new RuntimeException(e);
-//            }
-//        }
     }
 
     private String extractMessageContent(TLMessage tlMessage) {
@@ -263,9 +254,6 @@ public class TelegramClient implements MessageLoader {
     private void indexMessage(TLMessage tlMessage) {
         String messageContent = extractMessageContent(tlMessage);
         if (StringUtils.notEmpty(messageContent)) {
-            long startTime = System.currentTimeMillis();
-
-            System.out.println("Indexing message:\n" + messageContent);
             Message message = new Message();
             message.setId(String.valueOf(tlMessage.getId()));
             Channel channel = channelRepository.find(String.valueOf(tlMessage.getChatId()));
@@ -276,7 +264,7 @@ public class TelegramClient implements MessageLoader {
                 if (String.valueOf(tlMessage.getChatId()).equals(SELF)) {
                     message.setChannel("SELF");
                 } else {
-                    System.out.println("Can not find channel #" + tlMessage.getChatId());
+                    log.warn("Can not find channel #" + tlMessage.getChatId());
                 }
             }
 
@@ -285,20 +273,17 @@ public class TelegramClient implements MessageLoader {
             if (user != null) {
                 message.setAuthor(user.getUserName());
             } else {
-                System.out.println("Can not find user #" + fromId);
+                log.warn("Can not find user #" + fromId);
             }
 
             message.setBody(messageContent);
             message.setTimestamp(Instant.ofEpochSecond(tlMessage.getDate()));
-            messageRepository.save(message);
-
-            long endTime = System.currentTimeMillis();
-            IndexingStatistics.messageIndexed(message.getChannel(), startTime - endTime);
+            messageService.index(message);
         }
     }
 
     private void checkJoinMessage(TLMessage tlMessage) {
-        System.out.println("Waiting to index message:\n" + tlMessage.getMessage());
+        log.info("Incoming message:\n" + tlMessage.getMessage());
         Channel channel = channelRepository.find(String.valueOf(tlMessage.getChatId()));
         User user = userRepository.find(String.valueOf(tlMessage.getFromId()));
         if (channel != null && user != null) {
@@ -347,7 +332,7 @@ public class TelegramClient implements MessageLoader {
         }
 
         if (status == LoginStatus.ALREADYLOGGED) {
-            loadChannelsInformation();
+//            loadChannelsInformation();
             kernel.startBot();
         } else {
             throw new RuntimeException("Failed to log in: " + status);
@@ -370,29 +355,28 @@ public class TelegramClient implements MessageLoader {
     private class UpdatesHandler implements TelegramUpdatesHandler {
         @Override
         public void onMessage(TLMessage tlMessage) {
-            System.out.println("Received update: " + tlMessage.toString());
             if (joinedChannels.contains(String.valueOf(tlMessage.getChatId())) && tlMessage.getFwdFrom() == null) {
                 indexMessage(tlMessage);
             } else if (pendingChannels.getByJoinHash(tlMessage.getMessage()) != null) {
                 checkJoinMessage(tlMessage);
             } else {
-                System.out.println("Ignoring message (chat#" + tlMessage.getChatId() + "):\n" + tlMessage.getMessage());
+                log.warn("Ignoring message (chat#" + tlMessage.getChatId() + "):\n" + tlMessage.getMessage());
             }
         }
 
         @Override
         public void onUpdatedMessage(TLUpdateShortMessage tlMessage) {
-            Message message = messageRepository.find(String.valueOf(tlMessage.getId()));
+            Message message = messageService.getById(String.valueOf(tlMessage.getId()));
             if (message != null) {
                 System.err.println("Updating message");
                 message.setBody(tlMessage.getMessage());
-                messageRepository.save(message);
+                messageService.updateMessage(message);
             }
         }
     }
 
     private class ApiHandler implements TelegramApiHandler {
-        private TLChannel join(String channel) throws ChannelJoinException {
+        private TLChannel join(String channel) throws ChannelNotFoundException, ChannelAlreadyJoinedException {
             try {
                 if (channel.contains("telegram.me/joinchat") || channel.contains("t.me/joinchat")) {
                     String hash = channel.substring(channel.lastIndexOf('/') + 1);
@@ -432,35 +416,41 @@ public class TelegramClient implements MessageLoader {
 
                 }
             } catch (RpcException e) {
-                System.err.println("Error joining chat: " + e.toString());
-                return null;
+                Set<String> errorsForNotFound = new HashSet<String>() {{
+                    add("INVITE_HASH_INVALID");
+                    add("USERNAME_INVALID");
+                    add("USERNAME_NOT_OCCUPIED");
+                }};
+
+                if ("USER_ALREADY_PARTICIPANT".equals(e.getErrorTag())) {
+                    throw new ChannelAlreadyJoinedException();
+                } else if (errorsForNotFound.contains(e.getErrorTag())) {
+                    throw new ChannelNotFoundException();
+                } else {
+                    throw new RuntimeException("Unknown error occurred", e);
+                }
             } catch (TimeoutException | IOException e) {
                 throw new RuntimeException(e);
             }
         }
 
         @Override
-        public JoinInfo joinChannel(String channel) throws ChannelJoinException {
+        public JoinInfo joinChannel(String channel) throws ChannelNotFoundException, ChannelAlreadyJoinedException {
             return joinChannel(channel, Instant.now());
         }
 
         @Override
-        public JoinInfo joinChannel(String channelLink, Instant indexingStart) throws ChannelJoinException {
+        public JoinInfo joinChannel(String channelLink, Instant indexingStart) throws ChannelNotFoundException, ChannelAlreadyJoinedException {
             TLChannel joinedChannel = join(channelLink);
-            if (joinedChannel != null) {
-                saveChat(joinedChannel);
-                JoinInfo joinInfo = new JoinInfo();
-                joinInfo.setChannel(TelegramConverter.convertChannel(joinedChannel));
-                joinInfo.setIndexingStart(indexingStart);
-                joinInfo.setJoinHash(UUID.randomUUID().toString());
+            saveChat(joinedChannel);
+            JoinInfo joinInfo = new JoinInfo();
+            joinInfo.setChannel(TelegramConverter.convertChannel(joinedChannel));
+            joinInfo.setIndexingStart(indexingStart);
+            joinInfo.setJoinHash(UUID.randomUUID().toString());
 
-                pendingChannels.add(joinInfo);
+            pendingChannels.add(joinInfo);
 
-                return joinInfo;
-            } else {
-                //TODO separate this cases
-                throw new ChannelJoinException("Channel not found or it is already joined");
-            }
+            return joinInfo;
         }
     }
 

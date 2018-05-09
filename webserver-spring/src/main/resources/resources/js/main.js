@@ -1,47 +1,48 @@
-function serializeFormData(formId) {
-    var unindexed_array = $(formId).serializeArray();
-    var indexed_array = {};
-
-    $.map(unindexed_array, function(n, i){
-        indexed_array[n['name']] = n['value'];
-    });
-
-    return indexed_array;
-}
-
 function sendJsonPayload(params) {
     var config = {
         cache: false,
         method: 'POST',
         contentType: 'application/json',
         success: console.log,
-        error: processErrorResponse
+        nok: processErrorResponse,
+        error: function(response) {
+            processErrorResponse(response.responseJSON);
+        }
     };
-    $.ajax(Object.assign(config, params));
-}
 
-function sendForm(url, formId, success, error) {
-    var params = {
-        url: url,
-        data: JSON.stringify(serializeFormData(formId))
+    var request = Object.assign(config, params);
+
+    request.success = function (response) {
+        if (response.status == 'ok') {
+            request.ok(response);
+        } else {
+            request.nok(response);
+        }
     };
-    if (success) {
-        params.success = success;
-    }
-    if (error) {
-        params.error = error;
-    }
-    sendJsonPayload(params);
+
+    $.ajax(request);
 }
 
 function showErrorMessage(text) {
+    var html =
+        '<div id=".alert-message">\
+                <div class="alert alert-danger">\
+                    <button type="button" class="close" data-dismiss="alert">&times;</button>' +
+                    text + '\
+            </div>\
+        </div>';
 
+    $('#alert-container').append(html);
 }
 
 function processErrorResponse(data) {
-    console.log(data);
+    showErrorMessage(data.message);
 }
 
 function formatDate(date) {
     return moment(date).format('DD MMM YYYY');
+}
+
+function handleClear(element) {
+    $(element)[0].parentElement.parentElement.parentElement.childNodes[0].childNodes[1].childNodes[0].click();
 }

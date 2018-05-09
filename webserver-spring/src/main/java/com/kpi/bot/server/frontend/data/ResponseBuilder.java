@@ -23,8 +23,8 @@ public class ResponseBuilder {
         return new ResponseBuilder("ok");
     }
 
-    public static ResponseBuilder ERROR() {
-        return new ResponseBuilder("error");
+    public static ResponseBuilder ERROR(String errorMessage) {
+        return new ResponseBuilder("error").add("message", errorMessage);
     }
 
 }

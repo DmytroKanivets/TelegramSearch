@@ -1,6 +1,5 @@
-package com.kpi.bot.services.loader.telegram.structure;
+package com.kpi.bot.entity.data;
 
-import com.kpi.bot.entity.data.Identifiable;
 import lombok.Data;
 
 import java.util.HashSet;
