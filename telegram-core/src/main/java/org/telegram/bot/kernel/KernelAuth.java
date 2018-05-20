@@ -269,6 +269,8 @@ public class KernelAuth {
             destDC = Integer.parseInt(e.getErrorTag().substring("PHONE_MIGRATE_".length()));
         } else if (e.getErrorTag().startsWith("USER_MIGRATE_")) {
             destDC = Integer.parseInt(e.getErrorTag().substring("USER_MIGRATE_".length()));
+        } else if (e.getErrorTag().startsWith("FILE_MIGRATE_")) {
+            destDC = Integer.parseInt(e.getErrorTag().substring("FILE_MIGRATE_".length()));
         } else {
             BotLogger.error(LOGTAG, e);
             destDC = -1;

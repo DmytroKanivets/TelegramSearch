@@ -42,7 +42,7 @@
                             <a class="small text-muted" role="button" id="channel"><span>Channel: </span><span>{{input.channel || input.placeholder}}</span></a>
                         </div>
                         <div class="col-auto">
-                            <a class="small text-muted" role="button" id="date-from"><span>From: </span><span>{{ startDateText }}</span></a>
+                            <a class="small text-muted" role="button" id="date-from"><span>From: </span><span>{{startDateText}}</span></a>
                         </div>
                         <div class="col-auto">
                             <a class="small text-muted" role="button" id="date-to"><span>To: </span><span>{{endDateText}}</span></a>
@@ -61,9 +61,10 @@
                 <div class="card mb-3">
                     <div class="card-body">
                         <h5 class="card-title">{{message.header}}</h5>
-                        <p class="card-text text-justify" style="white-space: pre-wrap;">{{message.body}}</p>
+                        <p class="card-text text-justify" style="white-space: pre-wrap;">{{createTextLinks(message.body)}}</p>
                         <p class="card-text text-muted">{{formatDate(message.timestamp)}}</p>
                     </div>
+                    <img class="card-img-bottom" :src="message.illustration" alt="Card image cap"/>
                 </div>
             </div>
         </div>
@@ -117,7 +118,22 @@
             }
         },
         methods: {
-            formatDate: formatDate
+            formatDate: formatDate,
+            createTextLinks: function (text) {
+                return (text || "")
+                    .replace(/(?:(https?\:\/\/[^\s]+))/m, '<a href="$1">$1</a>')
+                    .replace(/(?:@([^\s]+))/m, '<a href="telegram.me/$1">$1</a>');
+    //                return (text || "").replace(
+//                    /([^\S]|^)(((https?\:\/\/)|(www\.))(\S+))/gi,
+//                    function (match, space, url) {
+//                        var hyperlink = url;
+//                        if (!hyperlink.match('^https?:\/\/')) {
+//                            hyperlink = 'http://' + hyperlink;
+//                        }
+//                        return space + '<a href="' + hyperlink + '">' + url + '</a>';
+//                    }
+//                );
+            }
         }
     });
 
@@ -180,6 +196,12 @@
 
 
 <script>
+    function toHtml(input) {
+        return input
+            .replace('\n', '<br/>')
+            .replace(/(?:(https?\:\/\/[^\s]+))/m, '<a href="$1">$1</a>');
+    }
+
     function searchForMessages() {
         var params = {
             url: '/api/message/params',
@@ -190,6 +212,8 @@
                    if (message.channel && message.channel != message.author) {
                        message.header += ' @ ' + message.channel;
                    }
+
+                   message.
                 });
                 data.messages = response.messages;
             }

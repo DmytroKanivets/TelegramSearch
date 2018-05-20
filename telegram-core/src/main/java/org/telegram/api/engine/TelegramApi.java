@@ -429,12 +429,12 @@ public class TelegramApi {
      *
      * @param <T>     the type parameter
      * @param method  the method
-     * @param timeout the timeout
+     * @param dc the data center
      * @return the t
      * @throws IOException the iO exception
      */
-    public <T extends TLObject> T doRpcCall(TLMethod<T> method, int timeout) throws IOException, java.util.concurrent.TimeoutException {
-        return doRpcCall(method, timeout, 0);
+    public <T extends TLObject> T doRpcCall(TLMethod<T> method, int dc) throws IOException, java.util.concurrent.TimeoutException {
+        return doRpcCall(method, DEFAULTCOMPETABLETIMEOUTMILLIS, dc);
     }
 
     /**
@@ -485,7 +485,7 @@ public class TelegramApi {
      * @throws IOException the iO exception
      */
     public <T extends TLObject> T doRpcCallGzip(TLMethod<T> method, int timeout) throws IOException, java.util.concurrent.TimeoutException {
-        return doRpcCall(new GzipRequest<T>(method), timeout, 0);
+        return doRpcCall(new GzipRequest<T>(method), timeout, primaryDc);
     }
 
     /**
@@ -536,7 +536,7 @@ public class TelegramApi {
      * @param callback the callback
      */
     public <T extends TLObject> void doRpcCallNonAuth(TLMethod<T> method, int timeout, RpcCallback<T> callback) {
-        doRpcCall(method, timeout, callback, 0, false);
+        doRpcCall(method, timeout, callback, primaryDc, false);
     }
 
     /**

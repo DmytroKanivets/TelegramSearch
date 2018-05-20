@@ -27,8 +27,8 @@ public class Logger {
     public static void w(String tag, String message) {
         if (logInterface != null) {
             logInterface.w(tag, message);
-        } else {fff
-            System.out.println(tag + ":" + message);
+        } else {
+            throw new RuntimeException("No logger found");
         }
     }
 
@@ -41,8 +41,8 @@ public class Logger {
     public static void d(String tag, String message) {
         if (logInterface != null) {
             logInterface.d(tag, message);
-        } else {fff
-            System.out.println(tag + ":" + message);
+        } else {
+            throw new RuntimeException("No logger found");
         }
     }
 

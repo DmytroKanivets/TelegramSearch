@@ -32,6 +32,9 @@ public interface IKernelComm extends NotificationsService.NotificationObserver {
 
     <T extends TLObject> T doRpcCallSync(TLMethod<T> method) throws ExecutionException, RpcException;
 
+    //TODO remove this hack
+    <T extends TLObject> T doRpcCallSync(TLMethod<T> method, int dataCenterId) throws ExecutionException, RpcException;
+
     <T extends TLObject> T doRpcCallSyncNoAuth(TLMethod<T> method) throws ExecutionException, RpcException;
 
     <T extends TLObject> void doRpcCallAsync(TLMethod<T> method, TelegramFunctionCallback<T> callback);

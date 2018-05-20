@@ -27,6 +27,7 @@ import org.telegram.api.chat.TLChat;
 import org.telegram.api.chat.channel.TLChannel;
 import org.telegram.api.contacts.TLResolvedPeer;
 import org.telegram.api.engine.RpcException;
+import org.telegram.api.file.location.TLFileLocation;
 import org.telegram.api.functions.channels.TLRequestChannelsGetParticipant;
 import org.telegram.api.functions.channels.TLRequestChannelsGetParticipants;
 import org.telegram.api.functions.channels.TLRequestChannelsJoinChannel;
@@ -34,27 +35,42 @@ import org.telegram.api.functions.contacts.TLRequestContactsResolveUsername;
 import org.telegram.api.functions.messages.TLRequestMessagesGetAllChats;
 import org.telegram.api.functions.messages.TLRequestMessagesGetHistory;
 import org.telegram.api.functions.messages.TLRequestMessagesImportChatInvite;
+import org.telegram.api.functions.upload.TLRequestUploadGetFile;
 import org.telegram.api.input.chat.TLInputChannel;
+import org.telegram.api.input.filelocation.TLAbsInputFileLocation;
+import org.telegram.api.input.filelocation.TLInputFileLocation;
 import org.telegram.api.input.peer.TLInputPeerChannel;
 import org.telegram.api.input.user.TLInputUser;
 import org.telegram.api.message.TLAbsMessage;
 import org.telegram.api.message.TLMessage;
+import org.telegram.api.message.media.TLMessageMediaPhoto;
+import org.telegram.api.message.media.TLMessageMediaWebPage;
 import org.telegram.api.messages.TLAbsMessages;
+import org.telegram.api.photo.TLPhoto;
+import org.telegram.api.photo.size.TLAbsPhotoSize;
+import org.telegram.api.photo.size.TLPhotoSize;
+import org.telegram.api.storage.file.TLAbsFileType;
+import org.telegram.api.storage.file.TLFileGif;
+import org.telegram.api.storage.file.TLFileJpeg;
+import org.telegram.api.storage.file.TLFilePng;
 import org.telegram.api.updates.TLAbsUpdates;
 import org.telegram.api.updates.TLUpdateShortMessage;
 import org.telegram.api.updates.TLUpdates;
+import org.telegram.api.upload.file.TLAbsFile;
+import org.telegram.api.upload.file.TLFile;
+import org.telegram.api.upload.file.TLFileCdnRedirect;
+import org.telegram.api.webpage.TLWebPage;
 import org.telegram.bot.kernel.TelegramBot;
 import org.telegram.bot.structure.LoginStatus;
 import org.telegram.tl.TLIntVector;
+import org.telegram.tl.TLVector;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.nio.ByteBuffer;
 import java.time.Instant;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
@@ -62,7 +78,8 @@ import java.util.stream.Collectors;
 @Slf4j
 public class TelegramClient implements MessageLoader {
 
-    public static String SELF = "130666341";
+    private static final int MESSAGE_SIZE_THRESHOLD = 20;
+    private static String TEST = "130666341";
 
     private TelegramUpdatesHandler updatesHandler;
     private TelegramApiHandler apiHandler;
@@ -76,7 +93,7 @@ public class TelegramClient implements MessageLoader {
 
     private PendingChannels pendingChannels = new PendingChannels();
     private Set<String> joinedChannels = new HashSet<String>() {{
-        this.add(SELF);
+        this.add(TEST);
     }};
 
     public void stopIndexing(String id) {
@@ -184,60 +201,69 @@ public class TelegramClient implements MessageLoader {
     }
 
     private void indexHistory(Channel channel, Instant startDate) {
-        try {
-            final int batchSize = 100; //Max batch size available from Telegram
+        new Thread(() -> {
+            try {
+                final int batchSize = 100; //Max batch size available from Telegram
 
-            Instant now = Instant.now();
-            int offset = 0;
+                Instant now = Instant.now();
+                int offset = 0;
 
-            log.info("Loading history for channel " + channel);
-            TLInputPeerChannel tlPeerChannel = new TLInputPeerChannel();
-            tlPeerChannel.setChannelId(Integer.valueOf(channel.getId()));
-            tlPeerChannel.setAccessHash(Long.valueOf(channel.getHash()));
+                log.info("Loading history for channel " + channel);
+                TLInputPeerChannel tlPeerChannel = new TLInputPeerChannel();
+                tlPeerChannel.setChannelId(Integer.valueOf(channel.getId()));
+                tlPeerChannel.setAccessHash(Long.valueOf(channel.getHash()));
 
-            TLMessage lastMessage;
-            do {
-                lastMessage = null;
-                TLRequestMessagesGetHistory historyRequest = new TLRequestMessagesGetHistory();
-                historyRequest.setPeer(tlPeerChannel);
+                TLMessage lastMessage;
+                do {
+                    lastMessage = null;
+                    TLRequestMessagesGetHistory historyRequest = new TLRequestMessagesGetHistory();
+                    historyRequest.setPeer(tlPeerChannel);
 
-                historyRequest.setLimit(batchSize);
-                historyRequest.setAddOffset(offset);
-                historyRequest.setOffsetDate((int)startDate.getEpochSecond());
+                    historyRequest.setLimit(batchSize);
+                    historyRequest.setAddOffset(offset);
+                    historyRequest.setOffsetDate((int)startDate.getEpochSecond());
+                    try {
+                        TLAbsMessages historyResponse = kernel.getKernelComm().doRpcCallSync(historyRequest);
 
-                TLAbsMessages historyResponse = kernel.getKernelComm().doRpcCallSync(historyRequest);
+                        if (historyResponse != null && historyResponse.getMessages() != null) {
+                            for (TLAbsMessage tlAbsMessage : historyResponse.getMessages()) {
+                                if (tlAbsMessage instanceof TLMessage) {
+                                    lastMessage = (TLMessage) tlAbsMessage;
+                                    indexMessage(lastMessage);
+                                } else {
+                                    System.err.println("Unknown message type " + tlAbsMessage);
+                                }
+                            }
+                        }
 
-                if (historyResponse != null && historyResponse.getMessages() != null) {
-                    for (TLAbsMessage tlAbsMessage : historyResponse.getMessages()) {
-                        if (tlAbsMessage instanceof TLMessage) {
-                            lastMessage = (TLMessage) tlAbsMessage;
-                            indexMessage(lastMessage);
+                        offset += batchSize;
+                        Thread.sleep(1000);
+                    } catch (RpcException e) {
+                        if (e.getErrorTag().startsWith("FLOOD_WAIT_")) {
+                            int time = Integer.valueOf(e.getErrorTag().substring("FLOOD_WAIT_".length())) + 1;
+                            Thread.sleep(time * 1000);
                         } else {
-                            System.err.println("Unknown message type " + tlAbsMessage);
+                            throw new RuntimeException(e);
                         }
                     }
-                }
+                } while (lastMessage != null && lastMessage.getDate() < now.getEpochSecond());
 
-                if (historyResponse == null) { //FLOOD WAIT 20
-                    Thread.sleep(30 * 1000);
-                } else {
-                    offset += batchSize;
-                }
-            } while (lastMessage != null && lastMessage.getDate() < now.getEpochSecond());
-
-        } catch (ExecutionException | RpcException | InterruptedException e) {
-            throw new RuntimeException(e);
-        }
+            } catch (ExecutionException | InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }).start();
     }
 
     private String extractMessageContent(TLMessage tlMessage) {
-        String message = null;
+        String message = "";
         if (StringUtils.notEmpty(tlMessage.getMessage())) {
             message = tlMessage.getMessage();
-        } else if (tlMessage.getMedia() != null) {
+        }
+
+        if (tlMessage.getMedia() != null) {
             try {
                 Method method = tlMessage.getMedia().getClass().getMethod("getCaption");
-                message = String.valueOf(method.invoke(tlMessage.getMedia()));
+                message = (message.length() > 0 ? "\n\n" : "") +  String.valueOf(method.invoke(tlMessage.getMedia()));
             } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e1) {
                 //It's OK
             }
@@ -251,18 +277,130 @@ public class TelegramClient implements MessageLoader {
         }
     }
 
+    private String downloadPhoto(TLPhoto photo) throws ExecutionException, RpcException {
+
+        TLInputFileLocation inputLocation = null;
+
+        TLVector<TLAbsPhotoSize> sizes = photo.getSizes();
+
+        ListIterator<TLAbsPhotoSize> iterator = sizes.listIterator(sizes.size());
+
+        int photoSize = 0;
+
+        while (iterator.hasPrevious()) {
+            TLAbsPhotoSize tlPhotoSize = iterator.previous();
+
+            if (tlPhotoSize instanceof TLPhotoSize) {
+                if (((TLPhotoSize) tlPhotoSize).getLocation() instanceof TLFileLocation) {
+                    inputLocation = new TLInputFileLocation();
+                    TLFileLocation photoLocation = (TLFileLocation) ((TLPhotoSize) tlPhotoSize).getLocation();
+                    inputLocation.setLocalId(photoLocation.getLocalId());
+                    inputLocation.setVolumeId(photoLocation.getVolumeId());
+                    inputLocation.setSecret(photoLocation.getSecret());
+                    photoSize = ((TLPhotoSize) tlPhotoSize).getSize();
+                }
+            }
+        }
+
+        if (inputLocation == null) {
+            log.error("Can not find location of photo " + photo);
+            return null;
+        }
+
+
+        TLRequestUploadGetFile fileRequest = new TLRequestUploadGetFile();
+
+        fileRequest.setLocation(inputLocation);
+
+        final int partSize = 512 * 1024; //Telegram limitation: should be a power of 2 and less than 1 MB
+
+        ByteBuffer buffer = ByteBuffer.allocate(photoSize);
+        TLAbsFile resultFile = null;
+        int destDC = 4; //empiric value
+        for (int i = 0; i < photoSize; i += partSize) {
+            fileRequest.setOffset(i);
+            fileRequest.setLimit(partSize);
+            try {
+                resultFile = kernel.getKernelComm().doRpcCallSync(fileRequest, destDC);
+                if (resultFile instanceof TLFile) {
+                    buffer.put(((TLFile) resultFile).getBytes().getData());
+                }
+            } catch (RpcException e) {
+                if (e.getErrorTag().startsWith("FILE_MIGRATE_")) {
+                    destDC = Integer.parseInt(e.getErrorTag().substring("FILE_MIGRATE_".length()));
+                    i -= partSize;
+                } else {
+                    throw e;
+                }
+            }
+        }
+
+        if (resultFile instanceof TLFile) {
+            TLAbsFileType fileType = ((TLFile) resultFile).getType();
+
+            String file = "data:";
+
+            if (fileType instanceof TLFileGif) {
+                file += "image/gif";
+            } else if (fileType instanceof TLFilePng) {
+                file += "image/png";
+            } else if (fileType instanceof TLFileJpeg) {
+                file += "image/jpeg";
+            } else {
+                throw new RuntimeException("Unrecognized file type " + fileType);
+            }
+
+            file += ";base64,";
+            file += Base64.getEncoder().encodeToString(buffer.array());
+
+            return file;
+        } else if (resultFile instanceof TLFileCdnRedirect) {
+            System.err.println("Redirected to cdn");
+            return null;
+            //todo handle redirect
+        } else {
+            throw new RuntimeException("Can not handle file type " + resultFile);
+        }
+    }
+
+    private String getIllustration(TLMessage tlMessage) {
+        try {
+            if (tlMessage.getMedia() != null) {
+
+                if (tlMessage.getMedia() instanceof TLMessageMediaPhoto
+                    && ((TLMessageMediaPhoto) tlMessage.getMedia()).getPhoto() instanceof TLPhoto) {
+                    return downloadPhoto((TLPhoto) ((TLMessageMediaPhoto) tlMessage.getMedia()).getPhoto());
+                } else if (tlMessage.getMedia() instanceof TLMessageMediaWebPage
+                        && ((TLMessageMediaWebPage) tlMessage.getMedia()).getWebPage() instanceof TLWebPage
+                        && ((TLWebPage) ((TLMessageMediaWebPage) tlMessage.getMedia()).getWebPage()).getPhoto() != null
+                        && ((TLWebPage) ((TLMessageMediaWebPage) tlMessage.getMedia()).getWebPage()).getPhoto() instanceof TLPhoto) {
+
+                    return downloadPhoto((TLPhoto) ((TLWebPage) ((TLMessageMediaWebPage) tlMessage.getMedia()).getWebPage()).getPhoto() );
+                } else {
+                    System.err.println("Can not extract media content for " + tlMessage.getMedia());
+                }
+            }
+
+            return null;
+        } catch (ExecutionException | RpcException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     private void indexMessage(TLMessage tlMessage) {
         String messageContent = extractMessageContent(tlMessage);
-        if (StringUtils.notEmpty(messageContent)) {
+        if (StringUtils.notEmpty(messageContent)/* && messageContent.length() > MESSAGE_SIZE_THRESHOLD*/) {
             Message message = new Message();
             message.setId(String.valueOf(tlMessage.getId()));
+            message.setIllustration(getIllustration(tlMessage));
+
             Channel channel = channelRepository.find(String.valueOf(tlMessage.getChatId()));
 
             if (channel != null) {
                 message.setChannel(channel.getName());
             } else {
-                if (String.valueOf(tlMessage.getChatId()).equals(SELF)) {
-                    message.setChannel("SELF");
+                if (String.valueOf(tlMessage.getChatId()).equals(TEST)) {
+                    message.setChannel("TEST");
                 } else {
                     log.warn("Can not find channel #" + tlMessage.getChatId());
                 }
@@ -334,9 +472,14 @@ public class TelegramClient implements MessageLoader {
         if (status == LoginStatus.ALREADYLOGGED) {
 //            loadChannelsInformation();
             kernel.startBot();
+            log.info("Started listening Telegram");
         } else {
             throw new RuntimeException("Failed to log in: " + status);
         }
+    }
+
+    public List<Channel> getJoinedChannels() {
+        return joinedChannels.stream().map(channelRepository::find).filter(Objects::nonNull).collect(Collectors.toList());
     }
 
     @Override

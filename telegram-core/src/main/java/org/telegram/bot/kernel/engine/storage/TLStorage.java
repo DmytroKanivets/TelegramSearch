@@ -36,7 +36,7 @@ public class TLStorage extends TLObject {
     public TLStorage() {
         keys = new TLVector<>();
         dcInfos = new TLVector<>();
-        primaryDc = 1;
+        primaryDc = 2;
         isAuthorized = false;
         uid = 0;
         phone = "";

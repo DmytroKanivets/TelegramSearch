@@ -150,7 +150,6 @@ public class KernelComm implements IKernelComm {
         }
     }
 
-    @Override
     public <T extends TLObject> T doRpcCallSync(final TLMethod<T> method) throws ExecutionException, RpcException {
         T answer = null;
         if (getApi() != null) {
@@ -171,10 +170,50 @@ public class KernelComm implements IKernelComm {
             });
             try {
                 answer = result.get();
-            } catch (InterruptedException e) {
-                BotLogger.error(LOGTAG, e);
+            } catch (ExecutionException e) {
+                if (e.getCause() instanceof RpcException) {
+                    throw (RpcException) e.getCause();
+                } else {
+                    throw new RuntimeException(e);
+                }
             } catch (Exception e) {
-                BotLogger.error(LOGTAG, "Bot threw an unexpected exception at KernelComm-doRpcCallSync", e);
+                throw new RuntimeException(e);
+            }
+        }
+
+        handleAffectedMessagesAndHistory(answer);
+        return answer;
+    }
+
+        @Override
+    public <T extends TLObject> T doRpcCallSync(final TLMethod<T> method, int dc) throws ExecutionException, RpcException {
+        T answer = null;
+        if (getApi() != null) {
+            final Future<T> result = this.exe.submit(() -> {
+                T internalAnswer = null;
+                try {
+                    internalAnswer = getApi().doRpcCall(method, dc);
+                } catch (RpcException e) {
+                    BotLogger.debug(LOGTAG, "Rpc call failed", e);
+                    throw e;
+                } catch (TimeoutException e) {
+                    BotLogger.debug(LOGTAG, "timeout");
+                } catch (Exception e) {
+                    BotLogger.error(LOGTAG, "Bot threw an unexpected exception at KernelComm-doRpcCallSync", e);
+                }
+
+                return internalAnswer;
+            });
+            try {
+                answer = result.get();
+            } catch (ExecutionException e) {
+                if (e.getCause() instanceof RpcException) {
+                    throw (RpcException) e.getCause();
+                } else {
+                    throw new RuntimeException(e);
+                }
+            } catch (Exception e) {
+                throw new RuntimeException(e);
             }
         }
 

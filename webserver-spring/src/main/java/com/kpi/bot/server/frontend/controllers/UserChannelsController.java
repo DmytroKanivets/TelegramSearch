@@ -35,7 +35,7 @@ public class UserChannelsController {
 
     @GetMapping
     public Object getChannels() {
-        return ResponseBuilder.OK().add("channels", channelRepository.findAll()).build();
+        return ResponseBuilder.OK().add("channels", telegramClient.getJoinedChannels()).build();
     }
 
 

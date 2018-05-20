@@ -16,5 +16,6 @@ public class Message implements Identifiable {
     private String channel;
     private String author;
     private String body;
+    private String illustration;
     private Instant timestamp;
 }

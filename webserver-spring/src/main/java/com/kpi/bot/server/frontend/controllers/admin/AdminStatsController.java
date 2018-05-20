@@ -39,9 +39,9 @@ public class AdminStatsController {
             channels.remove(is.getName());
         }
 
-        for (String channel : channels) {
-            statistics.getStatistics().add(new Statistics.StatisticsEntry(channel, 0, 0));
-        }
+//        for (String channel : channels) {
+//            statistics.getStatistics().add(new Statistics.StatisticsEntry(channel, 0, 0));
+//        }
         return ResponseBuilder.OK().add("stats", statistics).build();
     }
 

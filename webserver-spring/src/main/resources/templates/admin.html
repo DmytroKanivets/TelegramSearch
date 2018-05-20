@@ -40,21 +40,21 @@
                 <div class="row">
                     <div class="col-md-12">
                         <ul class="list-group">
-                            <li class="list-group-item" v-for="channel in channelStats">
+                            <li class="list-group-item" v-for="channel in channels">
                                 {{channel.name}}
-                                <span class="fa fa-times delete-channel" v-on:click="deleteChannel"></span>
+                                <span class="fa fa-times delete-channel" v-on:click="deleteChannel(channel.id)"></span>
                             </li>
                         </ul>
                     </div>
                 </div>
             </div>
             <div class="col-md-6">
-                <div class="row  mb-4">
-                    <div class="col-md-12">
-                        <h4>Stats</h4>
-                    </div>
+                <!--<div class="row  mb-4">-->
+                    <!--<div class="col-md-12">-->
+                        <!--<h4>Stats</h4>-->
+                    <!--</div>-->
+                <!--</div>-->
 
-                </div>
                 <div class="row">
                     <div class="col-md-12">
                         <div class="card mb-4" v-show="memoryStats.loaded">
@@ -151,7 +151,7 @@
 <script>
     var state = {};
     var data = {
-        channelStats: [],
+        channels: [],
         totalStats: {
             loaded: false,
             messages: 0,
@@ -186,11 +186,12 @@
         el: "#main",
         data: data,
         methods: {
-            deleteChannel: function (event) {
+            deleteChannel: function (id) {
+//                console.log(id);
+//                console.log(arguments);
                 var result = confirm("You really want to delete this channel?");
                 if (result) {
-                    deleteChannel(event.target.parentNode.textContent.trim());
-                    loadChannels();
+                    deleteChannel(id);
                 }
             },
             formatDate: formatDate,
@@ -231,6 +232,7 @@
             value: '',
             unsavedclass: null,
             send: 'never',
+            placement: 'bottom',
             success: function(response, newValue) {
                 data.addChannel.selectedDate = newValue;
             }
@@ -238,6 +240,8 @@
         $("#selected-date").removeClass("editable editable-click");
 
         $("#main").removeClass("d-none");
+
+        setInterval(reloadInfo, 1000);
 
     });
 </script>
@@ -252,8 +256,6 @@
     }
 
     function addChannel() {
-        var channelLink = $('#channel-link').val();
-
         var channelInfo = {
             channel: data.addChannel.link
         };
@@ -268,7 +270,7 @@
             method: 'PUT',
             data: JSON.stringify(channelInfo),
             ok: function (response) {
-                loadChannels();
+                refreshView();
                 data.addChannel.loading = false;
                 $('#add-channel').modal('hide');
             }
@@ -277,12 +279,18 @@
 
     }
 
-    function deleteChannel(channelName) {
+    function refreshView() {
+        loadChannels();
+        loadIndexingStats();
+        loadMemoryStats();
+    }
+
+    function deleteChannel(channelId) {
         var params = {
-            url: '/api/admin/channels/name/' + channelName,
+            url: '/api/admin/channels/id/' + channelId,
             method: 'DELETE',
             ok: function (response) {
-                loadChannels();
+                refreshView();
             }
         };
         sendJsonPayload(params);
@@ -290,17 +298,15 @@
 
     function loadChannels() {
         var params = {
-            url: '/api/admin/stats/messages',
+            url: '/api/channels',
             method: 'GET',
             ok: function(response) {
-                data.channelStats = response.stats.statistics;
-                data.totalStats = response.stats.total;
-                data.totalStats.loaded = true;
-
+                data.channels = response.channels;
             }
         };
         sendJsonPayload(params);
     }
+
     function loadIndexingStats() {
         var params = {
             url: '/api/admin/stats/indexing',
@@ -308,6 +314,17 @@
             ok: function(response) {
                 data.indexingStats = response;
                 data.indexingStats.loaded = true;
+            }
+        };
+        sendJsonPayload(params);
+
+
+        params = {
+            url: '/api/admin/stats/messages',
+            method: 'GET',
+            ok: function(response) {
+                data.totalStats = response.stats.total;
+                data.totalStats.loaded = true;
             }
         };
         sendJsonPayload(params);
