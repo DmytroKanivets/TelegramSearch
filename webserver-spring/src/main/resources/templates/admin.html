@@ -271,6 +271,10 @@
                 loadChannels();
                 data.addChannel.loading = false;
                 $('#add-channel').modal('hide');
+            },
+            nok: function (response) {
+                data.addChannel.loading = false;
+                showErrorMessage(response.message);
             }
         };
         sendJsonPayload(params);
