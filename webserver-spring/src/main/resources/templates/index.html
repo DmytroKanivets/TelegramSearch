@@ -181,21 +181,31 @@
 
 <script>
     function searchForMessages() {
+
         var params = {
             url: '/api/message/params',
-            data: JSON.stringify(data.input),
+            data: JSON.stringify(hack(data.input)),
             ok: function(response) {
                 response.messages.forEach(function (message) {
-                   message.header = message.author;
-                   if (message.channel && message.channel != message.author) {
-                       message.header += ' @ ' + message.channel;
-                   }
+                    message.header = message.author;
+                    if (message.channel && message.channel != message.author) {
+                        message.header += ' @ ' + message.channel;
+                    }
                 });
                 data.messages = response.messages;
+                if (data.messages.length == 0) {
+                    showErrorMessage("No messages found");
+                }
             }
         };
 
         sendJsonPayload(params);
+    }
+
+    function hack(input) {
+        var data = Object.assign({}, input);
+        data.body += ' -вице -ohota_i_rubalka -народную -2018 -"лучше можно сегодня в ЦКМе" -"конкурсные выступления"';
+        return data;
     }
 
     $("#form-search-message").submit(function(e) {

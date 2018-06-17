@@ -25,14 +25,16 @@ function sendJsonPayload(params) {
 
 function showErrorMessage(text) {
     var html =
-        '<div id=".alert-message">\
-                <div class="alert alert-danger">\
-                    <button type="button" class="close" data-dismiss="alert">&times;</button>' +
-                    text + '\
-            </div>\
-        </div>';
+            '<div class="alert alert-danger">\
+                <button type="button" class="close" data-dismiss="alert">&times;</button>' +
+                text + '\
+            </div>';
 
-    $('#alert-container').append(html);
+    var element = $(html);
+
+    $('#alert-container').append(element);
+
+    setTimeout(() => element.alert('close'), 2000);
 }
 
 function processErrorResponse(data) {
